@@ -62,7 +62,7 @@ export function AddScreen() {
   }
 
   function handleAccept(input: AcceptBreakdownInput) {
-    accept.mutate(input, { onSuccess: () => navigate("/") });
+    accept.mutate(input, { onSuccess: () => navigate("/board") });
   }
 
   function addManual() {
@@ -80,7 +80,7 @@ export function AddScreen() {
         estimateMinutes: estimateNum,
         area: manualArea.trim() || null,
       },
-      { onSuccess: () => navigate("/") },
+      { onSuccess: () => navigate("/board") },
     );
   }
 
@@ -91,7 +91,7 @@ export function AddScreen() {
           <IconButton
             edge="start"
             color="inherit"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/board")}
             aria-label="Back"
           >
             <ArrowBackIcon />

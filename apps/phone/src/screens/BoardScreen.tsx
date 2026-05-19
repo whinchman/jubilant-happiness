@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import HomeIcon from "@mui/icons-material/Home";
 import {
   AppBar,
   Box,
@@ -83,6 +84,14 @@ export function BoardScreen() {
     <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
       <AppBar position="static">
         <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            onClick={() => navigate("/")}
+            aria-label="Home"
+          >
+            <HomeIcon />
+          </IconButton>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Board
           </Typography>

@@ -4,9 +4,14 @@ import {
   createTask,
   deleteTask,
   fetchAreas,
+  fetchAuthStatus,
   fetchBoard,
+  fetchGetStartedSession,
+  login,
+  logout,
   moveTask,
   requestBreakdown,
+  setupAccount,
   updateTask,
   type MoveTaskInput,
   type UpdateTaskInput,
@@ -76,5 +81,34 @@ export function useAcceptBreakdown() {
       void qc.invalidateQueries({ queryKey: ["board"] });
       void qc.invalidateQueries({ queryKey: ["areas"] });
     },
+  });
+}
+
+export function useGetStartedSession() {
+  return useQuery({
+    queryKey: ["focusSession"],
+    queryFn: fetchGetStartedSession,
+    gcTime: 0,
+    staleTime: Infinity,
+  });
+}
+
+export function useAuthStatus() {
+  return useQuery({ queryKey: ["authStatus"], queryFn: fetchAuthStatus });
+}
+
+export function useSetup() {
+  return useMutation({ mutationFn: setupAccount });
+}
+
+export function useLogin() {
+  return useMutation({ mutationFn: login });
+}
+
+export function useLogout() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: logout,
+    onSuccess: () => qc.clear(),
   });
 }

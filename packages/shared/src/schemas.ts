@@ -44,3 +44,9 @@ export const acceptBreakdownSchema = z.object({
   steps: z.array(breakdownStepSchema).min(1).max(20),
 });
 export type AcceptBreakdownInput = z.infer<typeof acceptBreakdownSchema>;
+
+export const credentialsSchema = z.object({
+  username: z.string().trim().min(1).max(60),
+  password: z.string().min(6).max(200),
+});
+export type Credentials = z.infer<typeof credentialsSchema>;

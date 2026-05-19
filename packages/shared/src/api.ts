@@ -1,7 +1,14 @@
-import type { Board, BreakdownPreview, Project, Task } from "./types";
+import type {
+  AuthStatus,
+  Board,
+  BreakdownPreview,
+  Project,
+  Task,
+} from "./types";
 import type {
   AcceptBreakdownInput,
   CreateTaskInput,
+  Credentials,
   MoveTaskInput,
   UpdateTaskInput,
 } from "./schemas";
@@ -86,5 +93,34 @@ export function acceptBreakdown(input: AcceptBreakdownInput): Promise<Task[]> {
   return request<Task[]>("/breakdown/accept", {
     method: "POST",
     body: JSON.stringify(input),
+  });
+}
+
+export function fetchGetStartedSession(): Promise<Task[]> {
+  return request<Task[]>("/focus/get-started");
+}
+
+export function fetchAuthStatus(): Promise<AuthStatus> {
+  return request<AuthStatus>("/auth/status");
+}
+
+export function setupAccount(input: Credentials): Promise<void> {
+  return request<void>("/auth/setup", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function login(input: Credentials): Promise<void> {
+  return request<void>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function logout(): Promise<void> {
+  return request<void>("/auth/logout", {
+    method: "POST",
+    body: JSON.stringify({}),
   });
 }

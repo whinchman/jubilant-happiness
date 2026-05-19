@@ -8,10 +8,12 @@
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "test": "vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.97.1",
+    "@fastify/secure-session": "^8.3.0",
     "@todoer/shared": "workspace:*",
     "better-sqlite3": "^12.10.0",
     "drizzle-orm": "^0.45.2",
@@ -21,6 +23,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.9.0",
-    "drizzle-kit": "^0.31.10"
+    "drizzle-kit": "^0.31.10",
+    "vitest": "^4.1.6"
   }
 }

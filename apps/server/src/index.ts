@@ -1,21 +1,34 @@
 import "./load-env";
+import secureSession from "@fastify/secure-session";
 import Fastify from "fastify";
-import { DEV_USER_ID, ensureDevUser } from "./auth";
+import { ensureAccount } from "./auth";
 import { runMigrations } from "./db/migrate";
 import { registerRoutes } from "./routes";
+import { runWeeklyResetIfDue } from "./services/weekly-reset";
 
-const port = Number(process.env.PORT ?? 3000);
-const host = process.env.HOST ?? "0.0.0.0";
+const port = Number(process.env.PORT || 3000);
+const host = process.env.HOST || "0.0.0.0";
 
 runMigrations();
-ensureDevUser();
+ensureAccount();
+runWeeklyResetIfDue();
 
 const app = Fastify({ logger: true });
-
-// Auth seam — Phase 7 replaces this hook with real session resolution.
 app.decorateRequest("userId", "");
-app.addHook("preHandler", async (req) => {
-  req.userId = DEV_USER_ID;
+
+await app.register(secureSession, {
+  secret:
+    process.env.SESSION_SECRET ||
+    "todoer-development-secret-change-me-in-production",
+  salt: "todoerSaltValue1",
+  cookieName: "todoer_session",
+  cookie: {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+    maxAge: 60 * 60 * 24 * 30,
+  },
 });
 
 app.get("/health", async () => ({ ok: true, service: "todoer-server" }));

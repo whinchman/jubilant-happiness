@@ -43,3 +43,10 @@ export interface BreakdownPreview {
   area: string;
   steps: BreakdownStep[];
 }
+
+export interface AuthStatus {
+  /** True before any account has been created (first run). */
+  needsSetup: boolean;
+  /** True when the current session is logged in. */
+  authenticated: boolean;
+}

@@ -43,7 +43,7 @@ export async function breakdownTask(text: string): Promise<BreakdownOutcome> {
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
 
   const client = new Anthropic({ apiKey });
-  const model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
+  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 
   const message = await client.messages.create({
     model,

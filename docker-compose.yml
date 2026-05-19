@@ -1,0 +1,39 @@
+# TODO-ER — self-hosted stack. Run: docker compose up -d
+# Reads ANTHROPIC_API_KEY / SESSION_SECRET / ANTHROPIC_MODEL from a .env file.
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-6}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      DATABASE_PATH: /data/todoer.sqlite
+    volumes:
+      - todoer-data:/data
+    restart: unless-stopped
+
+  phone:
+    build:
+      context: .
+      dockerfile: apps/phone/Dockerfile
+    ports:
+      - "${PHONE_PORT:-8190}:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
+    ports:
+      - "${DASHBOARD_PORT:-8191}:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  todoer-data:
