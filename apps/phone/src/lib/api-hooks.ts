@@ -1,5 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTask, fetchAreas, fetchBoard } from "@todoer/shared";
+import {
+  acceptBreakdown,
+  createTask,
+  deleteTask,
+  fetchAreas,
+  fetchBoard,
+  moveTask,
+  requestBreakdown,
+  updateTask,
+  type MoveTaskInput,
+  type UpdateTaskInput,
+} from "@todoer/shared";
 
 export function useBoard() {
   return useQuery({ queryKey: ["board"], queryFn: fetchBoard });
@@ -13,6 +24,54 @@ export function useCreateTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: createTask,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["board"] });
+      void qc.invalidateQueries({ queryKey: ["areas"] });
+    },
+  });
+}
+
+export function useUpdateTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateTaskInput }) =>
+      updateTask(id, input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["board"] });
+      void qc.invalidateQueries({ queryKey: ["areas"] });
+    },
+  });
+}
+
+export function useDeleteTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteTask,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["board"] });
+    },
+  });
+}
+
+export function useMoveTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: MoveTaskInput }) =>
+      moveTask(id, input),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ["board"] });
+    },
+  });
+}
+
+export function useBreakdown() {
+  return useMutation({ mutationFn: requestBreakdown });
+}
+
+export function useAcceptBreakdown() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: acceptBreakdown,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["board"] });
       void qc.invalidateQueries({ queryKey: ["areas"] });

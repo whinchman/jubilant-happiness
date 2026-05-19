@@ -1,3 +1,4 @@
+import "./load-env";
 import Fastify from "fastify";
 import { DEV_USER_ID, ensureDevUser } from "./auth";
 import { runMigrations } from "./db/migrate";

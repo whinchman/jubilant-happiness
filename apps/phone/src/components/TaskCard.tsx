@@ -2,9 +2,14 @@ import RepeatIcon from "@mui/icons-material/Repeat";
 import { Box, Card, CardContent, Chip, Typography } from "@mui/material";
 import type { Task } from "@todoer/shared";
 
-export function TaskCard({ task }: { task: Task }) {
+interface TaskCardProps {
+  task: Task;
+  onClick?: () => void;
+}
+
+export function TaskCard({ task, onClick }: TaskCardProps) {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 2 }}>
+    <Card variant="outlined" sx={{ borderRadius: 2 }} onClick={onClick}>
       <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>
         <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
           {task.title}

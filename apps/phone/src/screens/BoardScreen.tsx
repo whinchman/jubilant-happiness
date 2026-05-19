@@ -8,10 +8,25 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { LANES, type Lane as LaneId } from "@todoer/shared";
-import { AddTaskDialog } from "../components/AddTaskDialog";
+import {
+  closestCorners,
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
+import { LANES, type Board, type Lane as LaneId, type Task } from "@todoer/shared";
+import { EditTaskDialog } from "../components/EditTaskDialog";
 import { Lane } from "../components/Lane";
-import { useBoard } from "../lib/api-hooks";
+import { TaskCard } from "../components/TaskCard";
+import { useBoard, useMoveTask } from "../lib/api-hooks";
+import { computeMove, findLane, findTaskInBoard, isLane } from "../lib/board-dnd";
 
 const LANE_LABELS: Record<LaneId, string> = {
   backlog: "Backlog",
@@ -22,7 +37,47 @@ const LANE_LABELS: Record<LaneId, string> = {
 
 export function BoardScreen() {
   const board = useBoard();
-  const [addOpen, setAddOpen] = useState(false);
+  const moveTask = useMoveTask();
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 220, tolerance: 6 } }),
+  );
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(String(event.active.id));
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setActiveId(null);
+    const { active, over } = event;
+    if (!over) return;
+    const draggedId = String(active.id);
+    const overId = String(over.id);
+    if (draggedId === overId) return;
+
+    const current = qc.getQueryData<Board>(["board"]);
+    if (!current) return;
+    const fromLane = findLane(current, draggedId);
+    if (!fromLane) return;
+    const toLane: LaneId | null = isLane(overId)
+      ? overId
+      : findLane(current, overId);
+    if (!toLane) return;
+
+    const planned = computeMove(current, draggedId, fromLane, toLane, overId);
+    if (!planned) return;
+    qc.setQueryData(["board"], planned.board);
+    moveTask.mutate({ id: draggedId, input: planned.input });
+  }
+
+  const boardData = board.data;
+  const activeTask =
+    activeId && boardData ? findTaskInBoard(boardData, activeId) : null;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
@@ -34,7 +89,7 @@ export function BoardScreen() {
           <IconButton
             color="inherit"
             edge="end"
-            onClick={() => setAddOpen(true)}
+            onClick={() => navigate("/add")}
             aria-label="Add task"
           >
             <AddIcon />
@@ -55,25 +110,46 @@ export function BoardScreen() {
             </Typography>
           </Box>
         )}
-        {board.data && (
-          <Box
-            sx={{
-              display: "flex",
-              gap: 1.5,
-              height: "100%",
-              overflowX: "auto",
-              overflowY: "hidden",
-              pb: 1,
-            }}
+        {boardData && (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => setActiveId(null)}
           >
-            {LANES.map((lane) => (
-              <Lane key={lane} title={LANE_LABELS[lane]} tasks={board.data[lane]} />
-            ))}
-          </Box>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1.5,
+                height: "100%",
+                overflowX: "auto",
+                overflowY: "hidden",
+                pb: 1,
+              }}
+            >
+              {LANES.map((lane) => (
+                <Lane
+                  key={lane}
+                  laneId={lane}
+                  title={LANE_LABELS[lane]}
+                  tasks={boardData[lane]}
+                  onTaskClick={setEditingTask}
+                />
+              ))}
+            </Box>
+            <DragOverlay>
+              {activeTask ? (
+                <Box sx={{ boxShadow: 6, borderRadius: 2 }}>
+                  <TaskCard task={activeTask} />
+                </Box>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         )}
       </Box>
 
-      <AddTaskDialog open={addOpen} onClose={() => setAddOpen(false)} />
+      <EditTaskDialog task={editingTask} onClose={() => setEditingTask(null)} />
     </Box>
   );
 }

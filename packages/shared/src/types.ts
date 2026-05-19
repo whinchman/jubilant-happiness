@@ -30,3 +30,16 @@ export interface Board {
   doing: Task[];
   done: Task[];
 }
+
+/** A single <=10-minute step produced by the AI breakdown. */
+export interface BreakdownStep {
+  title: string;
+  estimateMinutes: number;
+}
+
+/** The AI breakdown preview the user reviews before accepting. */
+export interface BreakdownPreview {
+  projectTitle: string;
+  area: string;
+  steps: BreakdownStep[];
+}

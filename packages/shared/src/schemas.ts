@@ -27,3 +27,20 @@ export const moveTaskSchema = z.object({
   afterId: z.string().optional(),
 });
 export type MoveTaskInput = z.infer<typeof moveTaskSchema>;
+
+export const breakdownRequestSchema = z.object({
+  text: z.string().trim().min(1).max(500),
+});
+export type BreakdownRequest = z.infer<typeof breakdownRequestSchema>;
+
+export const breakdownStepSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  estimateMinutes: z.number().int().min(1).max(240),
+});
+
+export const acceptBreakdownSchema = z.object({
+  projectTitle: z.string().trim().min(1).max(200),
+  area: z.string().trim().min(1).max(60),
+  steps: z.array(breakdownStepSchema).min(1).max(20),
+});
+export type AcceptBreakdownInput = z.infer<typeof acceptBreakdownSchema>;

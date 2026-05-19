@@ -1,5 +1,10 @@
-import type { Board, Project, Task } from "./types";
-import type { CreateTaskInput, MoveTaskInput, UpdateTaskInput } from "./schemas";
+import type { Board, BreakdownPreview, Project, Task } from "./types";
+import type {
+  AcceptBreakdownInput,
+  CreateTaskInput,
+  MoveTaskInput,
+  UpdateTaskInput,
+} from "./schemas";
 
 /** Thrown when an API request returns a non-2xx response. */
 export class ApiError extends Error {
@@ -68,4 +73,18 @@ export function moveTask(id: string, input: MoveTaskInput): Promise<Task> {
 
 export function deleteProject(id: string): Promise<void> {
   return request<void>(`/projects/${id}`, { method: "DELETE" });
+}
+
+export function requestBreakdown(text: string): Promise<BreakdownPreview> {
+  return request<BreakdownPreview>("/breakdown", {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+}
+
+export function acceptBreakdown(input: AcceptBreakdownInput): Promise<Task[]> {
+  return request<Task[]>("/breakdown/accept", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }

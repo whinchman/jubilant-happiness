@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { areaRoutes } from "./areas";
 import { boardRoutes } from "./board";
+import { breakdownRoutes } from "./breakdown";
 import { projectRoutes } from "./projects";
 import { taskRoutes } from "./tasks";
 
@@ -12,6 +13,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
       await api.register(taskRoutes);
       await api.register(projectRoutes);
       await api.register(areaRoutes);
+      await api.register(breakdownRoutes);
     },
     { prefix: "/api" },
   );
