@@ -1,33 +1,49 @@
 import type { ReactNode } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import {
-  AppBar,
-  Box,
-  Divider,
-  IconButton,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import { Box, IconButton, Toolbar, Typography } from "@mui/material";
 import { useNavigate } from "react-router";
+import { Sticker, TornRule, StampFooter, isoStamp } from "../components/Chrome";
+import {
+  bg,
+  blue,
+  bgCard,
+  display,
+  ink,
+  inkDim,
+  mono,
+  pink,
+  yellow,
+} from "../theme";
 
 export function FaqScreen() {
   const navigate = useNavigate();
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
-      <AppBar position="static">
-        <Toolbar>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+      <Box sx={{ bgcolor: ink, color: bg }}>
+        <Toolbar sx={{ minHeight: 56, px: 1 }}>
           <IconButton
             edge="start"
-            color="inherit"
             onClick={() => navigate("/")}
             aria-label="Back"
+            sx={{ color: bg, "&:hover": { color: pink } }}
           >
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6">How it works</Typography>
+          <Typography
+            sx={{
+              fontFamily: display,
+              fontWeight: 900,
+              fontSize: 22,
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
+          >
+            how_it_works
+            <Box component="span" sx={{ color: pink }}>.</Box>
+          </Typography>
         </Toolbar>
-      </AppBar>
+      </Box>
 
       <Box
         sx={{
@@ -39,96 +55,224 @@ export function FaqScreen() {
           width: "100%",
         }}
       >
-        <Section title="Adding tasks">
-          <Typography sx={{ mb: 2 }} color="text.secondary">
-            Tap the <strong>+</strong> on the Board, type a chunky task like
-            "clean the kitchen" or "tidy the yard", then hit{" "}
-            <strong>Break it down with AI</strong>. Claude returns 3–25 ordered steps,
-            each ≤10 minutes. Tweak titles and estimates, flip the repeat icon on
-            anything that should come back weekly, and tap{" "}
-            <strong>Add chore</strong> — the chore lands in the To Do lane with the steps in the
-            order they should be done.
+        <Box sx={{ mb: 4 }}>
+          <Sticker color="yellow" rotate={-2}>
+            field manual
+          </Sticker>
+          <Typography
+            sx={{
+              fontFamily: display,
+              fontWeight: 900,
+              fontSize: { xs: 48, sm: 64 },
+              lineHeight: 0.95,
+              textTransform: "uppercase",
+              letterSpacing: "-0.01em",
+              mt: 1.5,
+              textShadow: `3px 3px 0 ${pink}, -3px -3px 0 ${blue}`,
+            }}
+          >
+            the{" "}
+            <Box component="span" sx={{ color: pink }}>
+              manual.
+            </Box>
           </Typography>
-          <Typography sx={{ mb: 1 }} color="text.secondary">
-            Just need one task? Same screen, scroll down to{" "}
-            <em>Or add just one task</em>.
+          <Typography
+            sx={{
+              fontFamily: mono,
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: inkDim,
+              mt: 1.5,
+            }}
+          >
+            what every button does, and why you should use the doombox.
           </Typography>
+        </Box>
+
+        <Section number="01" sticker="add chores" stickerColor="pink" title="Adding chores">
+          <P>
+            tap the <Strong>＋</Strong> on the board, type a chunky task like "clean the
+            kitchen" or "tidy the yard", then hit{" "}
+            <Strong>break it down with ai</Strong>. claude returns 3–25 ordered steps,
+            each ≤10 minutes. tweak titles and estimates, flip the repeat switch on
+            anything that should come back weekly, and hit <Strong>add chore</Strong> —
+            the chore lands in to_do with the steps in execution order.
+          </P>
+          <P>
+            just need one task? same screen, scroll down to{" "}
+            <em>or just one</em>.
+          </P>
         </Section>
 
-        <Divider />
+        <TornRule mt={3} mb={3} />
 
-        <Section title="Get Started flow">
-          <Typography sx={{ mb: 2 }} color="text.secondary">
-            From Home, tap <strong>Get Started</strong>, pick your work and break
-            minutes, hit Start. The app picks a coherent batch of chores from To Do —
+        <Section number="02" sticker="get started flow" stickerColor="blue" title="Get Started flow">
+          <P>
+            from home, tap <Strong>get started</Strong>, pick your work and break
+            minutes, hit start. the app picks a coherent batch of chores from to_do —
             anchored to one area so you don't bounce between unrelated chores — and
-            shows you <strong>one step at a time</strong>.
-          </Typography>
-          <Typography sx={{ mb: 2 }} color="text.secondary">
-            A bar shrinks against the estimate: green → yellow → red → big{" "}
-            <strong>OVERTIME!</strong> in red if you blow past it.{" "}
-            <strong>Complete</strong> moves you to the next task. After a full work
-            interval a break screen takes over for your break minutes. The Finish
+            shows you <Strong>one step at a time</Strong>.
+          </P>
+          <P>
+            a bar shrinks against the estimate: pink filling, ticked into ten chunks. if
+            you blow past it, you get a giant <Strong>OVERTIME!</Strong> stamp.{" "}
+            <Strong>complete</Strong> moves you to the next task. after a full work
+            interval a pink break screen takes over for your break minutes. the finish
             screen recaps what you did.
-          </Typography>
-          <Typography sx={{ mb: 1 }} color="text.secondary">
-            Steps walk in <strong>position order</strong>, so "get supplies" → "do
-            the thing" → "put it back" actually stays in that order. Reorder steps
-            inside a chore from its edit dialog, or drag whole chores around in
-            To Do any time to change which one comes up first.
-          </Typography>
+          </P>
+          <P>
+            steps walk in <Strong>position order</Strong>, so "get supplies" → "do the
+            thing" → "put it back" actually stays in that order. reorder steps inside a
+            chore from its edit dialog, or drag whole chores around in to_do any time to
+            change which one comes up first.
+          </P>
         </Section>
 
-        <Divider />
+        <TornRule mt={3} mb={3} />
 
-        <Section title="The doombox">
-          <Typography sx={{ mb: 2 }} color="text.secondary">
-            A literal box, somewhere in your house. When you're cleaning a room and
-            find something that doesn't belong there — a stray mug in the bedroom, a
-            sock in the kitchen — you toss it in the <strong>doombox</strong>. You
-            do <em>not</em> leave the room to put it away. Leaving the room is how
-            ADHD cleaning sessions die.
-          </Typography>
-          <Typography sx={{ mb: 1 }} color="text.secondary">
-            Once a week, you process the doombox:
-          </Typography>
+        <Section number="03" sticker="the doombox" stickerColor="yellow" title="The doombox">
+          <P>
+            a literal box, somewhere in your house. when you're cleaning a room and
+            find something that doesn't belong — a stray mug in the bedroom, a sock in
+            the kitchen — you toss it in the <Strong>doombox</Strong>. you do{" "}
+            <em>not</em> leave the room to put it away. leaving the room is how adhd
+            cleaning sessions die.
+          </P>
+          <P>once a week, you process the doombox:</P>
           <Box
             component="ol"
             sx={{
-              pl: 3,
+              listStyle: "none",
+              counterReset: "doom",
+              pl: 0,
               mb: 2,
-              color: "text.secondary",
-              "& li": { mb: 0.75 },
+              "& li": {
+                counterIncrement: "doom",
+                pl: 4.5,
+                py: 0.5,
+                position: "relative",
+                fontFamily: mono,
+                fontSize: 13,
+                lineHeight: 1.5,
+                color: ink,
+                "&::before": {
+                  content: 'counter(doom, decimal-leading-zero) "."',
+                  position: "absolute",
+                  left: 0,
+                  top: 4,
+                  fontFamily: display,
+                  fontWeight: 900,
+                  fontSize: 18,
+                  color: pink,
+                },
+              },
             }}
           >
-            <li>Dump it onto a flat surface.</li>
+            <li>dump it onto a flat surface.</li>
             <li>
-              Sort into one pile per room the items belong in, plus a single{" "}
-              <strong>DOOM</strong> pile for anything to throw out, recycle, or
-              donate.
+              sort into one pile per room the items belong in, plus a single{" "}
+              <Strong>DOOM</Strong> pile for anything to throw out, recycle, or donate.
             </li>
-            <li>Walk each pile to its room.</li>
-            <li>Deal with the DOOM pile.</li>
+            <li>walk each pile to its room.</li>
+            <li>deal with the DOOM pile.</li>
           </Box>
-          <Typography sx={{ mb: 1 }} color="text.secondary">
-            The AI breakdown already knows about doomboxes — ask it to clean a room
-            and you'll get a "put anything that doesn't belong here in the doombox"
-            step instead of a focus-breaking "return items to their proper rooms."
-            And typing <strong>"sort the doombox"</strong> as a task produces that
-            weekly sort flow above.
-          </Typography>
+          <P>
+            the ai breakdown already knows about doomboxes — ask it to clean a room and
+            you'll get a "put anything that doesn't belong here in the doombox" step
+            instead of a focus-breaking "return items to their proper rooms." and
+            typing <Strong>"sort the doombox"</Strong> as a task produces that weekly
+            sort flow above.
+          </P>
         </Section>
       </Box>
+
+      <StampFooter left="welcome to the workshop" right={isoStamp()} />
     </Box>
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  number,
+  sticker,
+  stickerColor,
+  title,
+  children,
+}: {
+  number: string;
+  sticker: string;
+  stickerColor: "pink" | "blue" | "yellow";
+  title: string;
+  children: ReactNode;
+}) {
   return (
-    <Box sx={{ py: 3 }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: 1.5 }}>
+    <Box sx={{ py: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, mb: 1 }}>
+        <Box
+          sx={{
+            fontFamily: display,
+            fontWeight: 900,
+            fontSize: 36,
+            color: ink,
+            bgcolor: yellow,
+            border: `2px solid ${ink}`,
+            px: 1,
+            lineHeight: 1.1,
+          }}
+        >
+          {number}
+        </Box>
+        <Sticker color={stickerColor} rotate={-3} size="sm">
+          {sticker}
+        </Sticker>
+      </Box>
+      <Typography
+        sx={{
+          fontFamily: display,
+          fontWeight: 800,
+          fontSize: { xs: 28, sm: 36 },
+          textTransform: "uppercase",
+          letterSpacing: "-0.005em",
+          lineHeight: 1,
+          mb: 2,
+        }}
+      >
         {title}
+        <Box component="span" sx={{ color: pink }}>.</Box>
       </Typography>
+      <Box sx={{ pl: { xs: 0, sm: 0.5 } }}>{children}</Box>
+    </Box>
+  );
+}
+
+function P({ children }: { children: ReactNode }) {
+  return (
+    <Typography
+      sx={{
+        fontFamily: mono,
+        fontSize: 13,
+        lineHeight: 1.65,
+        color: ink,
+        mb: 2,
+      }}
+    >
+      {children}
+    </Typography>
+  );
+}
+
+function Strong({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      component="strong"
+      sx={{
+        fontFamily: mono,
+        fontWeight: 600,
+        color: ink,
+        bgcolor: bgCard,
+        borderBottom: `2px solid ${pink}`,
+        px: 0.25,
+      }}
+    >
       {children}
     </Box>
   );

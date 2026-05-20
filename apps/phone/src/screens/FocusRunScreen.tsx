@@ -3,6 +3,8 @@ import { Box, Button, CircularProgress, Stack, Typography } from "@mui/material"
 import { useLocation, useNavigate } from "react-router";
 import type { FocusItem } from "@todoer/shared";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { Sticker } from "../components/Chrome";
+import { blue, display, ink, mono, pink } from "../theme";
 import {
   ActiveTaskView,
   AreaCompleteView,
@@ -191,11 +193,30 @@ export function FocusRunScreen() {
     return (
       <Centered>
         {session.isError ? (
-          <Stack spacing={2} sx={{ alignItems: "center" }}>
-            <Typography color="error">
-              Couldn't start a session. Is the server running?
+          <Stack spacing={2} sx={{ alignItems: "center", textAlign: "center" }}>
+            <Sticker color="pink" rotate={-3}>server down?</Sticker>
+            <Typography
+              sx={{
+                fontFamily: display,
+                fontWeight: 800,
+                fontSize: 28,
+                textTransform: "uppercase",
+                letterSpacing: "-0.005em",
+              }}
+            >
+              couldn't start.
             </Typography>
-            <Button onClick={() => navigate("/")}>Back home</Button>
+            <Typography
+              sx={{
+                fontFamily: mono,
+                fontSize: 12,
+                letterSpacing: "0.08em",
+                color: "text.secondary",
+              }}
+            >
+              is the server running?
+            </Typography>
+            <Button variant="outlined" onClick={() => navigate("/")}>back home</Button>
           </Stack>
         ) : (
           <CircularProgress />
@@ -207,15 +228,41 @@ export function FocusRunScreen() {
   if (state.phase === "empty") {
     return (
       <Centered>
-        <Stack spacing={2} sx={{ alignItems: "center", textAlign: "center", px: 4 }}>
-          <Typography variant="h6">Nothing's ready yet</Typography>
-          <Typography color="text.secondary">
-            Move a few chores into the To Do lane, then start a session.
+        <Stack
+          spacing={2}
+          sx={{ alignItems: "center", textAlign: "center", px: 4, maxWidth: 380 }}
+        >
+          <Sticker color="yellow" rotate={-4}>no chores ready</Sticker>
+          <Typography
+            sx={{
+              fontFamily: display,
+              fontWeight: 900,
+              fontSize: 48,
+              lineHeight: 0.95,
+              textTransform: "uppercase",
+              letterSpacing: "-0.01em",
+              textShadow: `2px 2px 0 ${pink}, -2px -2px 0 ${blue}`,
+              mt: 1,
+            }}
+          >
+            empty<Box component="span" sx={{ color: pink }}>.</Box>
           </Typography>
-          <Button variant="contained" onClick={() => navigate("/board")}>
-            Go to the board
+          <Typography
+            sx={{
+              fontFamily: mono,
+              fontSize: 13,
+              lineHeight: 1.5,
+              color: "text.secondary",
+            }}
+          >
+            move a few chores into the to_do lane, then start a session.
+          </Typography>
+          <Button variant="contained" size="large" onClick={() => navigate("/board")} sx={{ py: 1.75, mt: 1 }}>
+            go to the board →
           </Button>
-          <Button onClick={() => navigate("/")}>Back home</Button>
+          <Button variant="text" onClick={() => navigate("/")} sx={{ color: ink }}>
+            back home
+          </Button>
         </Stack>
       </Centered>
     );
@@ -261,9 +308,9 @@ export function FocusRunScreen() {
       )}
       <ConfirmDialog
         open={confirmOpen}
-        title="End this session?"
-        message="You can always start another one."
-        confirmLabel="End session"
+        title="end this session?"
+        message="you can always start another one."
+        confirmLabel="end it"
         confirmColor="error"
         onConfirm={confirmAbandon}
         onCancel={() => setConfirmOpen(false)}

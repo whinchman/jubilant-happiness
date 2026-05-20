@@ -2,7 +2,6 @@ import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import HomeIcon from "@mui/icons-material/Home";
 import {
-  AppBar,
   Box,
   CircularProgress,
   IconButton,
@@ -28,11 +27,13 @@ import { Lane } from "../components/Lane";
 import { TaskCard } from "../components/TaskCard";
 import { useBoard, useMoveTask } from "../lib/api-hooks";
 import { computeMove, findChoreInBoard, findLane, isLane } from "../lib/board-dnd";
+import { bg, display, ink, pink, red } from "../theme";
+import { StampFooter, isoStamp } from "../components/Chrome";
 
 const LANE_LABELS: Record<LaneId, string> = {
-  ready: "To Do",
-  doing: "Doing",
-  done: "Done",
+  ready: "to_do",
+  doing: "doing",
+  done: "done!",
 };
 
 export function BoardScreen() {
@@ -64,9 +65,7 @@ export function BoardScreen() {
     if (!current) return;
     const fromLane = findLane(current, draggedId);
     if (!fromLane) return;
-    const toLane: LaneId | null = isLane(overId)
-      ? overId
-      : findLane(current, overId);
+    const toLane: LaneId | null = isLane(overId) ? overId : findLane(current, overId);
     if (!toLane) return;
 
     const planned = computeMove(current, draggedId, fromLane, toLane, overId);
@@ -76,46 +75,85 @@ export function BoardScreen() {
   }
 
   const boardData = board.data;
-  const activeChore =
-    activeId && boardData ? findChoreInBoard(boardData, activeId) : null;
+  const activeChore = activeId && boardData ? findChoreInBoard(boardData, activeId) : null;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
-      <AppBar position="static">
-        <Toolbar>
+      {/* Black masthead */}
+      <Box sx={{ bgcolor: ink, color: bg }}>
+        <Toolbar sx={{ minHeight: 56, px: 1 }}>
           <IconButton
             edge="start"
-            color="inherit"
             onClick={() => navigate("/")}
             aria-label="Home"
+            sx={{ color: bg, "&:hover": { color: pink } }}
           >
             <HomeIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Board
+          <Typography
+            sx={{
+              fontFamily: display,
+              fontWeight: 900,
+              fontSize: 22,
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+              ml: 0.5,
+            }}
+          >
+            the_pile
+            <Box component="span" sx={{ color: pink }}>
+              .
+            </Box>
           </Typography>
+          <Box sx={{ flexGrow: 1 }} />
           <IconButton
-            color="inherit"
             edge="end"
             onClick={() => navigate("/add")}
             aria-label="Add task"
+            sx={{
+              color: ink,
+              bgcolor: pink,
+              border: `2px solid ${bg}`,
+              borderRadius: 0,
+              width: 38,
+              height: 38,
+              "&:hover": { color: ink, bgcolor: pink, transform: "translate(-1px, -1px)" },
+            }}
           >
             <AddIcon />
           </IconButton>
         </Toolbar>
-      </AppBar>
+      </Box>
 
-      <Box sx={{ flexGrow: 1, overflow: "hidden", p: 1 }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflow: "hidden",
+          p: 1.25,
+          minHeight: 0,
+        }}
+      >
         {board.isLoading && (
           <Box sx={{ display: "grid", placeItems: "center", height: "100%" }}>
             <CircularProgress />
           </Box>
         )}
         {board.isError && (
-          <Box sx={{ p: 2 }}>
-            <Typography color="error">
-              Couldn't load the board. Is the server running?
-            </Typography>
+          <Box
+            sx={{
+              border: `2px solid ${ink}`,
+              p: 3,
+              m: 2,
+              bgcolor: red,
+              color: bg,
+              fontFamily: display,
+              fontWeight: 700,
+              fontSize: 16,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+            }}
+          >
+            couldn't load the board — is the server up?
           </Box>
         )}
         {boardData && (
@@ -135,6 +173,7 @@ export function BoardScreen() {
                 overflowX: "auto",
                 overflowY: "hidden",
                 pb: 1,
+                px: 0.5,
               }}
             >
               {LANES.map((lane) => (
@@ -147,10 +186,10 @@ export function BoardScreen() {
                 />
               ))}
             </Box>
-            <DragOverlay>
+            <DragOverlay dropAnimation={null}>
               {activeChore ? (
-                <Box sx={{ boxShadow: 6, borderRadius: 2 }}>
-                  <TaskCard chore={activeChore} />
+                <Box sx={{ transform: "rotate(-3deg)" }}>
+                  <TaskCard chore={activeChore} flat />
                 </Box>
               ) : null}
             </DragOverlay>
@@ -158,10 +197,26 @@ export function BoardScreen() {
         )}
       </Box>
 
+      <StampFooter
+        left={
+          boardData
+            ? `${countTotal(boardData)} chores · ${countDoing(boardData)} in flight`
+            : "loading"
+        }
+        right={isoStamp()}
+      />
+
       <EditTaskDialog
         choreId={editingChoreId}
         onClose={() => setEditingChoreId(null)}
       />
     </Box>
   );
+}
+
+function countTotal(b: Board): number {
+  return b.ready.length + b.doing.length + b.done.length;
+}
+function countDoing(b: Board): number {
+  return b.doing.length;
 }

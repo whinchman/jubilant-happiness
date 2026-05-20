@@ -1,14 +1,15 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { ChoreWithSteps } from "@todoer/shared";
+import type { ChoreWithSteps, Lane } from "@todoer/shared";
 import { TaskCard } from "./TaskCard";
 
 interface SortableTaskCardProps {
   chore: ChoreWithSteps;
   onClick?: () => void;
+  lane?: Lane;
 }
 
-export function SortableTaskCard({ chore, onClick }: SortableTaskCardProps) {
+export function SortableTaskCard({ chore, onClick, lane }: SortableTaskCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: chore.id });
 
@@ -18,13 +19,14 @@ export function SortableTaskCard({ chore, onClick }: SortableTaskCardProps) {
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.4 : 1,
+        opacity: isDragging ? 0.35 : 1,
         cursor: "grab",
+        touchAction: "manipulation",
       }}
       {...attributes}
       {...listeners}
     >
-      <TaskCard chore={chore} onClick={onClick} />
+      <TaskCard chore={chore} onClick={onClick} lane={lane} />
     </div>
   );
 }

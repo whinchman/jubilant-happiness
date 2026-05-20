@@ -2,17 +2,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import {
   Alert,
   Autocomplete,
   Box,
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   FormControlLabel,
   IconButton,
   Stack,
@@ -48,6 +48,17 @@ import {
 } from "../lib/api-hooks";
 import { findChoreInBoard } from "../lib/board-dnd";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { Sticker } from "./Chrome";
+import {
+  bg,
+  bgCard,
+  display,
+  ink,
+  inkDim,
+  inkFaint,
+  mono,
+  pink,
+} from "../theme";
 
 interface EditTaskDialogProps {
   /** Chore being edited; passing `null` closes the dialog. */
@@ -57,8 +68,6 @@ interface EditTaskDialogProps {
 
 export function EditTaskDialog({ choreId, onClose }: EditTaskDialogProps) {
   const board = useBoard();
-  // Always read the latest chore + steps from the board cache so that step
-  // mutations made inside the dialog reflect immediately on re-render.
   const chore = useMemo(() => {
     if (!choreId || !board.data) return null;
     return findChoreInBoard(board.data, choreId);
@@ -77,8 +86,6 @@ export function EditTaskDialog({ choreId, onClose }: EditTaskDialogProps) {
   const deleteTask = useDeleteTask();
   const createStep = useCreateStep();
 
-  // Sync form state when the dialog opens on a (different) chore. After the
-  // initial sync, user edits remain user-controlled even as board data refetches.
   useEffect(() => {
     if (!chore) return;
     setTitle(chore.title);
@@ -135,11 +142,9 @@ export function EditTaskDialog({ choreId, onClose }: EditTaskDialogProps) {
     createStep.mutate(
       {
         choreId: chore.id,
-        input: { title: "New step", estimateMinutes: 5 },
+        input: { title: "new step", estimateMinutes: 5 },
       },
-      {
-        onSuccess: (step) => setPendingFocusStepId(step.id),
-      },
+      { onSuccess: (step) => setPendingFocusStepId(step.id) },
     );
   }
 
@@ -151,23 +156,38 @@ export function EditTaskDialog({ choreId, onClose }: EditTaskDialogProps) {
         fullWidth
         maxWidth="xs"
       >
-        <DialogTitle>Edit chore</DialogTitle>
+        <Box sx={{ p: 2, pb: 0 }}>
+          <Sticker color="blue" rotate={-2} size="sm">
+            edit_chore
+          </Sticker>
+        </Box>
+        <DialogTitle
+          sx={{
+            fontFamily: display,
+            fontWeight: 900,
+            fontSize: 24,
+            textTransform: "uppercase",
+            letterSpacing: "-0.005em",
+          }}
+        >
+          tweak the details
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
-              label="Title"
+              label="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               fullWidth
             />
             <TextField
-              label="Estimate (minutes)"
+              label="estimate (minutes)"
               value={estimate}
               type="number"
               onChange={(e) => setEstimate(e.target.value)}
               error={estimate !== "" && !estimateValid}
               helperText={
-                estimate !== "" && !estimateValid ? "Use 1–600 minutes" : " "
+                estimate !== "" && !estimateValid ? "use 1–600 minutes" : " "
               }
               fullWidth
             />
@@ -179,11 +199,11 @@ export function EditTaskDialog({ choreId, onClose }: EditTaskDialogProps) {
               inputValue={area}
               onInputChange={(_, value) => setArea(value)}
               renderInput={(params) => (
-                <TextField {...params} label="Area (optional)" />
+                <TextField {...params} label="area (optional)" />
               )}
             />
             <TextField
-              label="Notes"
+              label="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               multiline
@@ -197,22 +217,54 @@ export function EditTaskDialog({ choreId, onClose }: EditTaskDialogProps) {
                   onChange={(e) => setRepeating(e.target.checked)}
                 />
               }
-              label="Repeats weekly"
+              label={
+                <Typography
+                  sx={{
+                    fontFamily: mono,
+                    fontSize: 12,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: ink,
+                  }}
+                >
+                  repeats weekly
+                </Typography>
+              }
             />
             {updateTask.isError && (
-              <Alert severity="error">Couldn't save changes.</Alert>
+              <Alert severity="error">couldn't save changes.</Alert>
             )}
             {deleteTask.isError && (
-              <Alert severity="error">Couldn't delete the chore.</Alert>
+              <Alert severity="error">couldn't delete the chore.</Alert>
             )}
 
             {chore && (
               <>
-                <Divider>
-                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                    Steps
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mt: 1 }}>
+                  <Typography
+                    sx={{
+                      fontFamily: display,
+                      fontWeight: 800,
+                      fontSize: 18,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    steps
                   </Typography>
-                </Divider>
+                  <Box sx={{ flexGrow: 1, borderTop: `2px dashed ${ink}` }} />
+                  <Typography
+                    sx={{
+                      fontFamily: mono,
+                      fontSize: 11,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: inkDim,
+                    }}
+                  >
+                    {String(chore.steps.length).padStart(2, "0")}
+                  </Typography>
+                </Box>
                 <StepsSection
                   choreId={chore.id}
                   steps={chore.steps}
@@ -223,29 +275,33 @@ export function EditTaskDialog({ choreId, onClose }: EditTaskDialogProps) {
                   startIcon={<AddIcon />}
                   onClick={addStep}
                   disabled={createStep.isPending}
+                  variant="outlined"
                   sx={{ alignSelf: "flex-start" }}
                 >
-                  Add step
+                  add step
                 </Button>
               </>
             )}
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
+        <DialogActions
+          sx={{ justifyContent: "space-between", px: 3, pb: 2.5 }}
+        >
           <Button
             color="error"
             startIcon={<DeleteIcon />}
             onClick={() => setConfirmOpen(true)}
             disabled={busy}
+            variant="outlined"
           >
-            Delete
+            delete
           </Button>
           <Stack direction="row" spacing={1}>
-            <Button onClick={handleClose} disabled={busy}>
-              Cancel
+            <Button onClick={handleClose} disabled={busy} variant="outlined">
+              cancel
             </Button>
             <Button variant="contained" onClick={save} disabled={!canSave}>
-              Save
+              save
             </Button>
           </Stack>
         </DialogActions>
@@ -253,9 +309,9 @@ export function EditTaskDialog({ choreId, onClose }: EditTaskDialogProps) {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Delete this chore?"
-        message="All steps inside it will also be deleted. This can't be undone."
-        confirmLabel="Delete"
+        title="delete this chore?"
+        message="all steps inside will also be deleted. this can't be undone."
+        confirmLabel="delete it"
         confirmColor="error"
         busy={deleteTask.isPending}
         onConfirm={confirmDelete}
@@ -306,8 +362,16 @@ function StepsSection({
 
   if (steps.length === 0) {
     return (
-      <Typography variant="caption" sx={{ color: "text.secondary", pl: 1 }}>
-        No steps yet.
+      <Typography
+        sx={{
+          fontFamily: mono,
+          fontSize: 11.5,
+          color: inkFaint,
+          fontStyle: "italic",
+          letterSpacing: "0.04em",
+        }}
+      >
+        no steps yet — add one below.
       </Typography>
     );
   }
@@ -318,12 +382,13 @@ function StepsSection({
         items={steps.map((s) => s.id)}
         strategy={verticalListSortingStrategy}
       >
-        <Stack spacing={0.5}>
-          {steps.map((step) => (
+        <Stack spacing={0.75}>
+          {steps.map((step, idx) => (
             <StepRow
               key={step.id}
               step={step}
               choreId={choreId}
+              index={idx}
               autoFocus={pendingFocusStepId === step.id}
               onAutoFocused={clearPendingFocus}
             />
@@ -337,11 +402,12 @@ function StepsSection({
 interface StepRowProps {
   step: Task;
   choreId: string;
+  index: number;
   autoFocus: boolean;
   onAutoFocused: () => void;
 }
 
-function StepRow({ step, choreId, autoFocus, onAutoFocused }: StepRowProps) {
+function StepRow({ step, choreId, index, autoFocus, onAutoFocused }: StepRowProps) {
   const [title, setTitle] = useState(step.title);
   const [estimate, setEstimate] = useState(String(step.estimateMinutes));
   const titleRef = useRef<HTMLInputElement | null>(null);
@@ -350,7 +416,6 @@ function StepRow({ step, choreId, autoFocus, onAutoFocused }: StepRowProps) {
   const deleteStep = useDeleteStep();
 
   useEffect(() => {
-    // Re-sync local state if the server-side step changes (refetch, drag, …).
     setTitle(step.title);
     setEstimate(String(step.estimateMinutes));
   }, [step.title, step.estimateMinutes]);
@@ -371,7 +436,7 @@ function StepRow({ step, choreId, autoFocus, onAutoFocused }: StepRowProps) {
   function commitTitle() {
     const trimmed = title.trim();
     if (trimmed.length === 0) {
-      setTitle(step.title); // revert
+      setTitle(step.title);
       return;
     }
     if (trimmed === step.title) return;
@@ -381,7 +446,7 @@ function StepRow({ step, choreId, autoFocus, onAutoFocused }: StepRowProps) {
   function commitEstimate() {
     const num = Number(estimate);
     if (!Number.isInteger(num) || num < 1 || num > 240) {
-      setEstimate(String(step.estimateMinutes)); // revert
+      setEstimate(String(step.estimateMinutes));
       return;
     }
     if (num === step.estimateMinutes) return;
@@ -409,39 +474,63 @@ function StepRow({ step, choreId, autoFocus, onAutoFocused }: StepRowProps) {
       ref={setNodeRef}
       sx={{
         display: "flex",
-        alignItems: "center",
-        gap: 0.5,
-        opacity: isDragging ? 0.5 : completed ? 0.55 : 1,
+        alignItems: "stretch",
+        gap: 0,
+        opacity: isDragging ? 0.5 : 1,
         transform: CSS.Transform.toString(transform),
         transition,
-        bgcolor: "rgba(0,0,0,0.02)",
-        borderRadius: 1,
-        px: 0.5,
+        border: `2px solid ${ink}`,
+        bgcolor: bgCard,
       }}
     >
-      <Checkbox
+      <Box
+        sx={{
+          bgcolor: completed ? bg : ink,
+          color: completed ? inkFaint : bg,
+          fontFamily: display,
+          fontWeight: 800,
+          fontSize: 14,
+          px: 0.75,
+          minWidth: 32,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRight: `2px solid ${ink}`,
+        }}
+      >
+        {String(index + 1).padStart(2, "0")}
+      </Box>
+      <IconButton
         size="small"
-        checked={completed}
-        onChange={toggleCompleted}
+        onClick={toggleCompleted}
         disabled={updateStep.isPending}
-        sx={{ p: 0.5 }}
-      />
+        aria-label={completed ? "uncheck step" : "check step"}
+        sx={{ borderRadius: 0, p: 0.5, color: ink, "&:hover": { color: pink } }}
+      >
+        {completed ? (
+          <CheckBoxIcon fontSize="small" sx={{ color: pink }} />
+        ) : (
+          <CheckBoxOutlineBlankIcon fontSize="small" />
+        )}
+      </IconButton>
       <TextField
         inputRef={titleRef}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onBlur={commitTitle}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            (e.target as HTMLInputElement).blur();
-          }
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
         }}
         variant="standard"
         size="small"
         sx={{
           flexGrow: 1,
+          alignSelf: "center",
           "& .MuiInput-input": {
+            fontFamily: mono,
+            fontSize: 13,
             textDecoration: completed ? "line-through" : "none",
+            color: completed ? inkFaint : ink,
           },
         }}
         slotProps={{ input: { disableUnderline: true } }}
@@ -452,24 +541,46 @@ function StepRow({ step, choreId, autoFocus, onAutoFocused }: StepRowProps) {
         onChange={(e) => setEstimate(e.target.value)}
         onBlur={commitEstimate}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            (e.target as HTMLInputElement).blur();
-          }
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
         }}
         variant="standard"
         size="small"
-        sx={{ width: 48 }}
-        slotProps={{
-          input: { disableUnderline: true },
-          htmlInput: { min: 1, max: 240, style: { textAlign: "right" } },
+        sx={{
+          width: 42,
+          alignSelf: "center",
+          "& .MuiInput-input": {
+            fontFamily: mono,
+            fontSize: 12,
+            textAlign: "right",
+          },
         }}
+        slotProps={{ input: { disableUnderline: true } }}
       />
+      <Typography
+        sx={{
+          fontFamily: mono,
+          fontSize: 10.5,
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          color: inkDim,
+          alignSelf: "center",
+          mr: 0.5,
+        }}
+      >
+        m
+      </Typography>
       <IconButton
         size="small"
         aria-label="Drag step"
         {...attributes}
         {...listeners}
-        sx={{ cursor: "grab", p: 0.5 }}
+        sx={{
+          cursor: "grab",
+          borderRadius: 0,
+          p: 0.5,
+          borderLeft: `2px solid ${ink}`,
+          "&:hover": { color: pink },
+        }}
       >
         <DragIndicatorIcon fontSize="small" />
       </IconButton>
@@ -478,7 +589,12 @@ function StepRow({ step, choreId, autoFocus, onAutoFocused }: StepRowProps) {
         aria-label="Delete step"
         onClick={remove}
         disabled={deleteStep.isPending}
-        sx={{ p: 0.5 }}
+        sx={{
+          borderRadius: 0,
+          p: 0.5,
+          borderLeft: `2px solid ${ink}`,
+          "&:hover": { color: pink },
+        }}
       >
         <DeleteIcon fontSize="small" />
       </IconButton>

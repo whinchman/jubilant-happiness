@@ -14,6 +14,18 @@ import {
   Typography,
 } from "@mui/material";
 import type { AcceptBreakdownInput, BreakdownPreview } from "@todoer/shared";
+import { Sticker } from "./Chrome";
+import {
+  bg,
+  blue,
+  bgCard,
+  display,
+  ink,
+  inkDim,
+  mono,
+  pink,
+  yellow,
+} from "../theme";
 
 interface EditableStep {
   key: string;
@@ -81,12 +93,42 @@ export function BreakdownReview({
     projectTitle.trim().length > 0 && validSteps.length > 0 && !accepting;
 
   return (
-    <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-        Here's the plan — tweak anything, then add it.
-      </Typography>
+    <Box
+      sx={{
+        p: 3,
+        display: "flex",
+        flexDirection: "column",
+        gap: 2.5,
+        maxWidth: 560,
+        mx: "auto",
+      }}
+    >
+      <Box>
+        <Sticker color="yellow" rotate={-2}>
+          here's the plan
+        </Sticker>
+        <Typography
+          sx={{
+            fontFamily: display,
+            fontWeight: 900,
+            fontSize: 36,
+            lineHeight: 0.95,
+            textTransform: "uppercase",
+            letterSpacing: "-0.01em",
+            mt: 1.5,
+            textShadow: `2px 2px 0 ${pink}, -2px -2px 0 ${blue}`,
+          }}
+        >
+          tweak it,
+          <br />
+          <Box component="span" sx={{ color: pink }}>
+            then ship it.
+          </Box>
+        </Typography>
+      </Box>
+
       <TextField
-        label="Chore"
+        label="chore"
         value={projectTitle}
         onChange={(e) => setProjectTitle(e.target.value)}
         fullWidth
@@ -98,7 +140,7 @@ export function BreakdownReview({
         onChange={(_, value) => setArea(value ?? "")}
         inputValue={area}
         onInputChange={(_, value) => setArea(value)}
-        renderInput={(params) => <TextField {...params} label="Area" />}
+        renderInput={(params) => <TextField {...params} label="area" />}
       />
       <FormControlLabel
         control={
@@ -108,29 +150,79 @@ export function BreakdownReview({
             size="small"
           />
         }
-        label="This chore repeats weekly"
-      />
-      <Typography variant="subtitle2" color="text.secondary">
-        Steps ({validSteps.length})
-      </Typography>
-      <Stack spacing={1}>
-        {steps.map((step, index) => (
-          <Stack
-            key={step.key}
-            direction="row"
-            spacing={1}
-            sx={{ alignItems: "flex-start" }}
+        label={
+          <Typography
+            sx={{
+              fontFamily: mono,
+              fontSize: 12.5,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: ink,
+            }}
           >
-            <Typography sx={{ mt: 1.5, color: "text.secondary", minWidth: 22 }}>
-              {index + 1}.
-            </Typography>
+            this chore repeats weekly
+          </Typography>
+        }
+      />
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 1 }}>
+        <Typography
+          sx={{
+            fontFamily: display,
+            fontWeight: 800,
+            fontSize: 20,
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+          }}
+        >
+          steps
+        </Typography>
+        <Box sx={{ flexGrow: 1, borderTop: `2px dashed ${ink}` }} />
+        <Sticker color="blue" rotate={-2} size="sm">
+          {String(validSteps.length).padStart(2, "0")} valid
+        </Sticker>
+      </Box>
+
+      <Stack spacing={1.25}>
+        {steps.map((step, index) => (
+          <Box
+            key={step.key}
+            sx={{
+              display: "flex",
+              gap: 1,
+              alignItems: "flex-start",
+              bgcolor: bgCard,
+              border: `2px solid ${ink}`,
+              p: 1,
+            }}
+          >
+            <Box
+              sx={{
+                bgcolor: ink,
+                color: bg,
+                fontFamily: display,
+                fontWeight: 800,
+                fontSize: 18,
+                px: 0.75,
+                py: 0.5,
+                minWidth: 32,
+                textAlign: "center",
+                lineHeight: 1.1,
+              }}
+            >
+              {String(index + 1).padStart(2, "0")}
+            </Box>
             <TextField
               value={step.title}
               onChange={(e) => updateStep(step.key, { title: e.target.value })}
-              placeholder="Step"
+              placeholder="step"
               size="small"
               fullWidth
               multiline
+              sx={{
+                "& .MuiOutlinedInput-root": { borderWidth: 0 },
+                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+              }}
             />
             <TextField
               value={step.estimate}
@@ -138,38 +230,55 @@ export function BreakdownReview({
               type="number"
               size="small"
               sx={{
-                width: 84,
-                "& input[type=number]": { MozAppearance: "textfield" },
-                "& input[type=number]::-webkit-outer-spin-button": {
-                  WebkitAppearance: "none",
-                  margin: 0,
-                },
-                "& input[type=number]::-webkit-inner-spin-button": {
-                  WebkitAppearance: "none",
-                  margin: 0,
-                },
+                width: 70,
+                "& input": { textAlign: "right" },
+                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
               }}
             />
+            <Typography
+              sx={{
+                fontFamily: mono,
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: inkDim,
+                alignSelf: "center",
+                pr: 0.5,
+              }}
+            >
+              m
+            </Typography>
             <IconButton
               onClick={() => removeStep(step.key)}
               aria-label="Remove step"
               size="small"
-              sx={{ mt: 0.5 }}
+              sx={{ alignSelf: "flex-start", "&:hover": { color: pink } }}
             >
               <DeleteIcon fontSize="small" />
             </IconButton>
-          </Stack>
+          </Box>
         ))}
       </Stack>
-      <Button startIcon={<AddIcon />} onClick={addStep} sx={{ alignSelf: "flex-start" }}>
-        Add a step
+      <Button
+        startIcon={<AddIcon />}
+        onClick={addStep}
+        variant="outlined"
+        sx={{ alignSelf: "flex-start", py: 1 }}
+      >
+        add a step
       </Button>
       {error && (
-        <Alert severity="error">Couldn't add this chore. Try again.</Alert>
+        <Alert severity="error">couldn't add this chore. try again.</Alert>
       )}
-      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-        <Button onClick={onStartOver} disabled={accepting}>
-          Start over
+      <Stack direction="row" spacing={1.5} sx={{ mt: 1 }}>
+        <Button
+          onClick={onStartOver}
+          disabled={accepting}
+          variant="outlined"
+          size="large"
+          sx={{ py: 1.75 }}
+        >
+          start over
         </Button>
         <Button
           variant="contained"
@@ -183,9 +292,18 @@ export function BreakdownReview({
               isRepeating,
             })
           }
+          size="large"
+          sx={{ py: 1.75, fontSize: 16, justifyContent: "space-between" }}
         >
-          Add chore with {validSteps.length}{" "}
-          {validSteps.length === 1 ? "step" : "steps"}
+          <Box component="span">
+            add chore · {validSteps.length} {validSteps.length === 1 ? "step" : "steps"}
+          </Box>
+          <Box
+            component="span"
+            sx={{ fontFamily: display, fontWeight: 900, fontSize: 22, color: yellow }}
+          >
+            →
+          </Box>
         </Button>
       </Stack>
     </Box>

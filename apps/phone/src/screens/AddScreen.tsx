@@ -2,12 +2,10 @@ import { useState } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {
   Alert,
-  AppBar,
   Autocomplete,
   Box,
   Button,
   CircularProgress,
-  Divider,
   IconButton,
   Stack,
   TextField,
@@ -17,12 +15,23 @@ import {
 import { useNavigate } from "react-router";
 import { ApiError, type AcceptBreakdownInput, type BreakdownPreview } from "@todoer/shared";
 import { BreakdownReview } from "../components/BreakdownReview";
+import { Sticker } from "../components/Chrome";
 import {
   useAcceptBreakdown,
   useAreas,
   useBreakdown,
   useCreateTask,
 } from "../lib/api-hooks";
+import {
+  bg,
+  blue,
+  display,
+  ink,
+  inkDim,
+  mono,
+  pink,
+  yellow,
+} from "../theme";
 
 export function AddScreen() {
   const navigate = useNavigate();
@@ -50,9 +59,7 @@ export function AddScreen() {
       onError: (err) => {
         if (err instanceof ApiError && err.status === 422) {
           const detail = err.detail as { clarification?: string } | undefined;
-          setClarification(
-            detail?.clarification ?? "Could you add a little more detail?",
-          );
+          setClarification(detail?.clarification ?? "could you add a little more detail?");
         } else {
           setAiUnavailable(true);
           if (manualTitle.trim().length === 0) setManualTitle(trimmed);
@@ -85,20 +92,31 @@ export function AddScreen() {
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
-      <AppBar position="static">
-        <Toolbar>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+      <Box sx={{ bgcolor: ink, color: bg }}>
+        <Toolbar sx={{ minHeight: 56, px: 1 }}>
           <IconButton
             edge="start"
-            color="inherit"
             onClick={() => navigate("/board")}
             aria-label="Back"
+            sx={{ color: bg, "&:hover": { color: pink } }}
           >
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h6">Add tasks</Typography>
+          <Typography
+            sx={{
+              fontFamily: display,
+              fontWeight: 900,
+              fontSize: 22,
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
+          >
+            add_a_chore
+            <Box component="span" sx={{ color: pink }}>.</Box>
+          </Typography>
         </Toolbar>
-      </AppBar>
+      </Box>
 
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
         {preview ? (
@@ -111,55 +129,131 @@ export function AddScreen() {
             onStartOver={() => setPreview(null)}
           />
         ) : (
-          <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              What do you want to get done?
-            </Typography>
+          <Box
+            sx={{
+              p: 3,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2.5,
+              maxWidth: 540,
+              mx: "auto",
+            }}
+          >
+            <Box>
+              <Sticker color="pink" rotate={-2}>
+                ai breakdown
+              </Sticker>
+              <Typography
+                sx={{
+                  fontFamily: display,
+                  fontWeight: 900,
+                  fontSize: 38,
+                  lineHeight: 0.95,
+                  textTransform: "uppercase",
+                  letterSpacing: "-0.01em",
+                  mt: 1.5,
+                  textShadow: `2px 2px 0 ${pink}, -2px -2px 0 ${blue}`,
+                }}
+              >
+                what needs{" "}
+                <Box component="span" sx={{ color: pink }}>
+                  doing?
+                </Box>
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: mono,
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                  color: inkDim,
+                  mt: 1.5,
+                  letterSpacing: "0.04em",
+                }}
+              >
+                type a big thing. claude chops it into ≤10-min steps.
+              </Typography>
+            </Box>
+
             <TextField
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="e.g. Clean the kitchen"
+              placeholder="e.g. clean the kitchen"
               multiline
-              minRows={2}
+              minRows={3}
               fullWidth
               autoFocus
             />
             <Button
               variant="contained"
+              size="large"
               startIcon={
                 breakdown.isPending ? (
-                  <CircularProgress size={18} color="inherit" />
+                  <CircularProgress size={18} sx={{ color: yellow }} />
                 ) : undefined
               }
               onClick={runBreakdown}
               disabled={text.trim().length === 0 || breakdown.isPending}
+              sx={{
+                py: 2.25,
+                fontSize: 18,
+                justifyContent: "space-between",
+              }}
             >
-              {breakdown.isPending ? "Breaking it down…" : "Break it down with AI"}
+              <Box component="span">
+                {breakdown.isPending ? "breaking it down…" : "break it down with ai"}
+              </Box>
+              {!breakdown.isPending && (
+                <Box
+                  component="span"
+                  sx={{
+                    fontFamily: display,
+                    fontWeight: 900,
+                    fontSize: 24,
+                    color: yellow,
+                  }}
+                >
+                  →
+                </Box>
+              )}
             </Button>
             {clarification && <Alert severity="info">{clarification}</Alert>}
             {aiUnavailable && (
               <Alert severity="warning">
                 {breakdown.error instanceof ApiError && breakdown.error.status === 429
-                  ? "Hit the breakdown rate limit — try again later, or add it as a single task below."
-                  : "Couldn't reach the AI right now — add it as a single task below."}
+                  ? "hit the breakdown rate limit — add a single task below for now."
+                  : "couldn't reach the ai — add a single task below."}
               </Alert>
             )}
 
-            <Divider sx={{ color: "text.secondary" }}>or add just one task</Divider>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 1 }}>
+              <Box sx={{ flexGrow: 1, borderTop: `2px dashed ${ink}` }} />
+              <Typography
+                sx={{
+                  fontFamily: mono,
+                  fontSize: 11,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: inkDim,
+                }}
+              >
+                or just one
+              </Typography>
+              <Box sx={{ flexGrow: 1, borderTop: `2px dashed ${ink}` }} />
+            </Box>
 
             <TextField
-              label="Task"
+              label="title"
               value={manualTitle}
               onChange={(e) => setManualTitle(e.target.value)}
               fullWidth
             />
             <Stack direction="row" spacing={2}>
               <TextField
-                label="Minutes"
+                label="minutes"
                 type="number"
                 value={manualEstimate}
                 onChange={(e) => setManualEstimate(e.target.value)}
-                sx={{ width: 120 }}
+                sx={{ width: 130 }}
               />
               <Autocomplete
                 freeSolo
@@ -170,19 +264,21 @@ export function AddScreen() {
                 inputValue={manualArea}
                 onInputChange={(_, value) => setManualArea(value)}
                 renderInput={(params) => (
-                  <TextField {...params} label="Area (optional)" />
+                  <TextField {...params} label="area (optional)" />
                 )}
               />
             </Stack>
             {createTask.isError && (
-              <Alert severity="error">Couldn't add the task.</Alert>
+              <Alert severity="error">couldn't add the task. try again.</Alert>
             )}
             <Button
               variant="outlined"
+              size="large"
               onClick={addManual}
               disabled={manualTitle.trim().length === 0 || createTask.isPending}
+              sx={{ py: 1.5, fontSize: 14 }}
             >
-              Add this one task
+              add this one task
             </Button>
           </Box>
         )}
