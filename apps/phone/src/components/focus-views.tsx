@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, Button, Chip, Stack, Typography } from "@mui/material";
-import type { Task } from "@todoer/shared";
+import type { FocusItem } from "@todoer/shared";
 import { formatClock, formatMinutes } from "../lib/format";
 import {
   breakLines,
@@ -29,19 +29,20 @@ const CENTER = {
 } as const;
 
 interface ActiveTaskViewProps {
-  task: Task;
+  item: FocusItem;
   elapsedMs: number;
   onComplete: () => void;
   onAbandon: () => void;
 }
 
 export function ActiveTaskView({
-  task,
+  item,
   elapsedMs,
   onComplete,
   onAbandon,
 }: ActiveTaskViewProps) {
-  const estimateMs = task.estimateMinutes * 60_000;
+  const view = describe(item);
+  const estimateMs = view.estimateMinutes * 60_000;
   const progress = Math.max(0, 1 - elapsedMs / estimateMs);
   const overtime = elapsedMs >= estimateMs;
   // 100–80% pure green; 80–40% green→yellow; 40–0% yellow→red.
@@ -55,7 +56,7 @@ export function ActiveTaskView({
           variant="overline"
           sx={{ color: "text.secondary", fontWeight: 600 }}
         >
-          Current Task
+          {view.overline}
         </Typography>
         <Box
           sx={{
@@ -70,11 +71,19 @@ export function ActiveTaskView({
       </Box>
 
       <Box sx={CENTER}>
-        {task.area && <Chip label={task.area} color="primary" variant="outlined" />}
+        {view.area && <Chip label={view.area} color="primary" variant="outlined" />}
+        {view.context && (
+          <Typography
+            variant="subtitle1"
+            sx={{ color: "text.secondary", fontWeight: 500 }}
+          >
+            {view.context}
+          </Typography>
+        )}
         <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          {task.title}
+          {view.title}
         </Typography>
-        <Typography color="text.secondary">about {task.estimateMinutes} min</Typography>
+        <Typography color="text.secondary">about {view.estimateMinutes} min</Typography>
 
         {overtime ? (
           <Typography
@@ -127,6 +136,35 @@ export function ActiveTaskView({
       </Stack>
     </Box>
   );
+}
+
+interface ActiveTaskDescriptor {
+  overline: string;
+  title: string;
+  context: string | null;
+  area: string | null;
+  estimateMinutes: number;
+}
+
+function describe(item: FocusItem): ActiveTaskDescriptor {
+  if (item.kind === "standalone") {
+    return {
+      overline: "Current Chore",
+      title: item.chore.title,
+      context: null,
+      area: item.chore.area,
+      estimateMinutes: item.chore.estimateMinutes,
+    };
+  }
+  // No "X of N" — the focus screen never surfaces how much is left, only what's
+  // in front of the user right now. See [[focus-no-remaining-work]] in memory.
+  return {
+    overline: "Current Step",
+    title: item.step.title,
+    context: item.chore.title,
+    area: item.chore.area,
+    estimateMinutes: item.step.estimateMinutes,
+  };
 }
 
 interface BreakViewProps {

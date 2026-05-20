@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   acceptBreakdown,
+  createStep,
   createTask,
+  deleteStep,
   deleteTask,
   fetchAreas,
   fetchAuthStatus,
@@ -9,11 +11,16 @@ import {
   fetchGetStartedSession,
   login,
   logout,
+  moveStep,
   moveTask,
   requestBreakdown,
   setupAccount,
+  updateStep,
   updateTask,
+  type CreateStepInput,
+  type MoveStepInput,
   type MoveTaskInput,
+  type UpdateStepInput,
   type UpdateTaskInput,
 } from "@todoer/shared";
 
@@ -63,6 +70,64 @@ export function useMoveTask() {
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: MoveTaskInput }) =>
       moveTask(id, input),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ["board"] });
+    },
+  });
+}
+
+export function useCreateStep() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ choreId, input }: { choreId: string; input: CreateStepInput }) =>
+      createStep(choreId, input),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ["board"] });
+    },
+  });
+}
+
+export function useUpdateStep() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      choreId,
+      stepId,
+      input,
+    }: {
+      choreId: string;
+      stepId: string;
+      input: UpdateStepInput;
+    }) => updateStep(choreId, stepId, input),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ["board"] });
+    },
+  });
+}
+
+export function useDeleteStep() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ choreId, stepId }: { choreId: string; stepId: string }) =>
+      deleteStep(choreId, stepId),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ["board"] });
+    },
+  });
+}
+
+export function useMoveStep() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      choreId,
+      stepId,
+      input,
+    }: {
+      choreId: string;
+      stepId: string;
+      input: MoveStepInput;
+    }) => moveStep(choreId, stepId, input),
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: ["board"] });
     },

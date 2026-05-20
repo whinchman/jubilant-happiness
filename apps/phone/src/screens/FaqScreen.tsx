@@ -46,7 +46,7 @@ export function FaqScreen() {
             <strong>Break it down with AI</strong>. Claude returns 3–25 ordered steps,
             each ≤10 minutes. Tweak titles and estimates, flip the repeat icon on
             anything that should come back weekly, and tap{" "}
-            <strong>Add to Ready</strong> — the steps land in the Ready lane in the
+            <strong>Add chore</strong> — the chore lands in the To Do lane with the steps in the
             order they should be done.
           </Typography>
           <Typography sx={{ mb: 1 }} color="text.secondary">
@@ -60,9 +60,9 @@ export function FaqScreen() {
         <Section title="Get Started flow">
           <Typography sx={{ mb: 2 }} color="text.secondary">
             From Home, tap <strong>Get Started</strong>, pick your work and break
-            minutes, hit Start. The app picks a coherent batch of tasks from Ready —
+            minutes, hit Start. The app picks a coherent batch of chores from To Do —
             anchored to one area so you don't bounce between unrelated chores — and
-            shows you <strong>one task at a time</strong>.
+            shows you <strong>one step at a time</strong>.
           </Typography>
           <Typography sx={{ mb: 2 }} color="text.secondary">
             A bar shrinks against the estimate: green → yellow → red → big{" "}
@@ -72,9 +72,10 @@ export function FaqScreen() {
             screen recaps what you did.
           </Typography>
           <Typography sx={{ mb: 1 }} color="text.secondary">
-            Tasks walk in <strong>Ready-lane order</strong>, so "get supplies" → "do
-            the thing" → "put it back" actually stays in that order. Drag tasks
-            around in Ready any time to change the sequence.
+            Steps walk in <strong>position order</strong>, so "get supplies" → "do
+            the thing" → "put it back" actually stays in that order. Reorder steps
+            inside a chore from its edit dialog, or drag whole chores around in
+            To Do any time to change which one comes up first.
           </Typography>
         </Section>
 

@@ -5,6 +5,11 @@ export interface Task {
   id: string;
   userId: string;
   projectId: string | null;
+  /**
+   * NULL for a chore (top-level, lives on the board). Set to the chore's id for
+   * a step (lives in an ordered checklist under the chore; no lane semantics).
+   */
+  parentId: string | null;
   title: string;
   notes: string;
   area: string | null;
@@ -17,6 +22,11 @@ export interface Task {
   createdAt: number;
 }
 
+/** A chore as returned by the board API — its steps embedded in position order. */
+export interface ChoreWithSteps extends Task {
+  steps: Task[];
+}
+
 export interface Project {
   id: string;
   userId: string;
@@ -25,10 +35,25 @@ export interface Project {
 }
 
 export interface Board {
-  ready: Task[];
-  doing: Task[];
-  done: Task[];
+  ready: ChoreWithSteps[];
+  doing: ChoreWithSteps[];
+  done: ChoreWithSteps[];
 }
+
+/**
+ * The focus run iterates one of these at a time. A chore with steps explodes into
+ * one `step` item per incomplete step; a chore with no steps emits one `standalone`
+ * item representing the chore itself.
+ */
+export type FocusItem =
+  | { kind: "standalone"; chore: Task }
+  | {
+      kind: "step";
+      chore: Task;
+      step: Task;
+      stepIndex: number; // 1-based position of this step among the chore's steps
+      stepTotal: number;
+    };
 
 /** A single <=10-minute step produced by the AI breakdown. */
 export interface BreakdownStep {

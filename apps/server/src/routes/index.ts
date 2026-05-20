@@ -6,6 +6,7 @@ import { boardRoutes } from "./board";
 import { breakdownRoutes } from "./breakdown";
 import { focusRoutes } from "./focus";
 import { projectRoutes } from "./projects";
+import { stepRoutes } from "./steps";
 import { taskRoutes } from "./tasks";
 
 /**
@@ -28,6 +29,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
         });
         await guarded.register(boardRoutes);
         await guarded.register(taskRoutes);
+        await guarded.register(stepRoutes);
         await guarded.register(projectRoutes);
         await guarded.register(areaRoutes);
         await guarded.register(breakdownRoutes);

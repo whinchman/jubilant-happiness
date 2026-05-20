@@ -2,15 +2,19 @@ import type {
   AuthStatus,
   Board,
   BreakdownPreview,
+  FocusItem,
   Project,
   Task,
 } from "./types";
 import type {
   AcceptBreakdownInput,
+  CreateStepInput,
   CreateTaskInput,
   Credentials,
+  MoveStepInput,
   MoveTaskInput,
   SetupInput,
+  UpdateStepInput,
   UpdateTaskInput,
 } from "./schemas";
 
@@ -79,6 +83,39 @@ export function moveTask(id: string, input: MoveTaskInput): Promise<Task> {
   });
 }
 
+export function createStep(choreId: string, input: CreateStepInput): Promise<Task> {
+  return request<Task>(`/tasks/${choreId}/steps`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateStep(
+  choreId: string,
+  stepId: string,
+  input: UpdateStepInput,
+): Promise<Task> {
+  return request<Task>(`/tasks/${choreId}/steps/${stepId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteStep(choreId: string, stepId: string): Promise<void> {
+  return request<void>(`/tasks/${choreId}/steps/${stepId}`, { method: "DELETE" });
+}
+
+export function moveStep(
+  choreId: string,
+  stepId: string,
+  input: MoveStepInput,
+): Promise<Task> {
+  return request<Task>(`/tasks/${choreId}/steps/${stepId}/move`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export function deleteProject(id: string): Promise<void> {
   return request<void>(`/projects/${id}`, { method: "DELETE" });
 }
@@ -90,15 +127,15 @@ export function requestBreakdown(text: string): Promise<BreakdownPreview> {
   });
 }
 
-export function acceptBreakdown(input: AcceptBreakdownInput): Promise<Task[]> {
-  return request<Task[]>("/breakdown/accept", {
+export function acceptBreakdown(input: AcceptBreakdownInput): Promise<Task> {
+  return request<Task>("/breakdown/accept", {
     method: "POST",
     body: JSON.stringify(input),
   });
 }
 
-export function fetchGetStartedSession(): Promise<Task[]> {
-  return request<Task[]>("/focus/get-started");
+export function fetchGetStartedSession(): Promise<FocusItem[]> {
+  return request<FocusItem[]>("/focus/get-started");
 }
 
 export function fetchAuthStatus(): Promise<AuthStatus> {

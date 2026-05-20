@@ -22,15 +22,15 @@ import {
 } from "@dnd-kit/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { LANES, type Board, type Lane as LaneId, type Task } from "@todoer/shared";
+import { LANES, type Board, type Lane as LaneId } from "@todoer/shared";
 import { EditTaskDialog } from "../components/EditTaskDialog";
 import { Lane } from "../components/Lane";
 import { TaskCard } from "../components/TaskCard";
 import { useBoard, useMoveTask } from "../lib/api-hooks";
-import { computeMove, findLane, findTaskInBoard, isLane } from "../lib/board-dnd";
+import { computeMove, findChoreInBoard, findLane, isLane } from "../lib/board-dnd";
 
 const LANE_LABELS: Record<LaneId, string> = {
-  ready: "Ready",
+  ready: "To Do",
   doing: "Doing",
   done: "Done",
 };
@@ -40,7 +40,7 @@ export function BoardScreen() {
   const moveTask = useMoveTask();
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingChoreId, setEditingChoreId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -76,8 +76,8 @@ export function BoardScreen() {
   }
 
   const boardData = board.data;
-  const activeTask =
-    activeId && boardData ? findTaskInBoard(boardData, activeId) : null;
+  const activeChore =
+    activeId && boardData ? findChoreInBoard(boardData, activeId) : null;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
@@ -142,15 +142,15 @@ export function BoardScreen() {
                   key={lane}
                   laneId={lane}
                   title={LANE_LABELS[lane]}
-                  tasks={boardData[lane]}
-                  onTaskClick={setEditingTask}
+                  chores={boardData[lane]}
+                  onChoreClick={(c) => setEditingChoreId(c.id)}
                 />
               ))}
             </Box>
             <DragOverlay>
-              {activeTask ? (
+              {activeChore ? (
                 <Box sx={{ boxShadow: 6, borderRadius: 2 }}>
-                  <TaskCard task={activeTask} />
+                  <TaskCard chore={activeChore} />
                 </Box>
               ) : null}
             </DragOverlay>
@@ -158,7 +158,10 @@ export function BoardScreen() {
         )}
       </Box>
 
-      <EditTaskDialog task={editingTask} onClose={() => setEditingTask(null)} />
+      <EditTaskDialog
+        choreId={editingChoreId}
+        onClose={() => setEditingChoreId(null)}
+      />
     </Box>
   );
 }

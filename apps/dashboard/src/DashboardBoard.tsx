@@ -1,9 +1,14 @@
 import { Box, Chip, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { fetchBoard, LANES, type Lane, type Task } from "@todoer/shared";
+import {
+  fetchBoard,
+  LANES,
+  type ChoreWithSteps,
+  type Lane,
+} from "@todoer/shared";
 
 const LABELS: Record<Lane, string> = {
-  ready: "Ready",
+  ready: "To Do",
   doing: "Doing",
   done: "Done",
 };
@@ -28,7 +33,7 @@ export function DashboardBoard() {
       {data && (
         <Box sx={{ flexGrow: 1, display: "flex", gap: 3, minHeight: 0 }}>
           {LANES.map((lane) => (
-            <DashColumn key={lane} title={LABELS[lane]} tasks={data[lane]} />
+            <DashColumn key={lane} title={LABELS[lane]} chores={data[lane]} />
           ))}
         </Box>
       )}
@@ -36,7 +41,13 @@ export function DashboardBoard() {
   );
 }
 
-function DashColumn({ title, tasks }: { title: string; tasks: Task[] }) {
+function DashColumn({
+  title,
+  chores,
+}: {
+  title: string;
+  chores: ChoreWithSteps[];
+}) {
   return (
     <Paper
       sx={{
@@ -48,31 +59,42 @@ function DashColumn({ title, tasks }: { title: string; tasks: Task[] }) {
       }}
     >
       <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: "text.secondary" }}>
-        {title} · {tasks.length}
+        {title} · {chores.length}
       </Typography>
       <Stack spacing={1.5} sx={{ overflowY: "auto", flexGrow: 1 }}>
-        {tasks.map((task) => (
-          <Box
-            key={task.id}
-            sx={{ bgcolor: "rgba(255,255,255,0.05)", borderRadius: 2, p: 1.5 }}
-          >
-            <Typography sx={{ fontWeight: 600, fontSize: 18, mb: 0.75 }}>
-              {task.title}
-            </Typography>
-            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-              <Chip label={`${task.estimateMinutes} min`} size="small" />
-              {task.area && (
-                <Chip
-                  label={task.area}
-                  size="small"
-                  color="primary"
-                  variant="outlined"
-                />
-              )}
+        {chores.map((chore) => {
+          const stepTotal = chore.steps.length;
+          const stepDone = chore.steps.filter((s) => s.completedAt !== null).length;
+          return (
+            <Box
+              key={chore.id}
+              sx={{ bgcolor: "rgba(255,255,255,0.05)", borderRadius: 2, p: 1.5 }}
+            >
+              <Typography sx={{ fontWeight: 600, fontSize: 18, mb: 0.75 }}>
+                {chore.title}
+              </Typography>
+              <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                <Chip label={`${chore.estimateMinutes} min`} size="small" />
+                {chore.area && (
+                  <Chip
+                    label={chore.area}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                )}
+                {stepTotal > 0 && (
+                  <Chip
+                    label={`${stepDone}/${stepTotal}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+              </Box>
             </Box>
-          </Box>
-        ))}
-        {tasks.length === 0 && (
+          );
+        })}
+        {chores.length === 0 && (
           <Typography sx={{ color: "text.disabled" }}>—</Typography>
         )}
       </Stack>
