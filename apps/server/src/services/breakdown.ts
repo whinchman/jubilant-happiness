@@ -8,7 +8,7 @@ Rules:
 - Each step must be doable in 10 minutes or less. Estimate honestly (1-10 minutes).
 - Write each step as a short, specific imperative action ("Put the dishes in the dishwasher"), never a vague noun.
 - Order the steps the way they should actually be done.
-- Produce between 3 and 10 steps. If the task is genuinely huge, give the best 9 starting steps and make the 10th "Plan the rest of <task>".
+- Produce between 3 and 25 steps. If the task is genuinely too big to fit in 25 manageable steps, do NOT cram or pad with placeholder steps — set isActionable to false and put a specific question in clarification asking the user to narrow the scope or split it into separate tasks.
 - Choose a short "area" label that groups this task with similar chores (e.g. Kitchen, Bathroom, Bedroom, Yard, Laundry, Admin, Errands).
 - "projectTitle" is a short name for the overall task.
 
@@ -80,6 +80,7 @@ export async function breakdownTask(text: string): Promise<BreakdownOutcome> {
             steps: {
               type: "array",
               description: "The ordered steps; empty when isActionable is false.",
+              maxItems: 25,
               items: {
                 type: "object",
                 properties: {
@@ -117,7 +118,7 @@ export async function breakdownTask(text: string): Promise<BreakdownOutcome> {
   }
 
   const steps: BreakdownStep[] = data.steps
-    .slice(0, 10)
+    .slice(0, 25)
     .map((step) => ({
       title: step.title.trim(),
       estimateMinutes: Math.min(Math.max(Math.round(step.estimateMinutes), 1), 30),

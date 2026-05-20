@@ -43,7 +43,7 @@ export function FaqScreen() {
           <Typography sx={{ mb: 2 }} color="text.secondary">
             Tap the <strong>+</strong> on the Board, type a chunky task like
             "clean the kitchen" or "tidy the yard", then hit{" "}
-            <strong>Break it down with AI</strong>. Claude returns 3–10 ordered steps,
+            <strong>Break it down with AI</strong>. Claude returns 3–25 ordered steps,
             each ≤10 minutes. Tweak titles and estimates, flip the repeat icon on
             anything that should come back weekly, and tap{" "}
             <strong>Add to Ready</strong> — the steps land in the Ready lane in the

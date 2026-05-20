@@ -3,10 +3,15 @@ import { Box, Button, CircularProgress, Stack, Typography } from "@mui/material"
 import { useLocation, useNavigate } from "react-router";
 import type { Task } from "@todoer/shared";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { ActiveTaskView, BreakView, FinishView } from "../components/focus-views";
+import {
+  ActiveTaskView,
+  AreaCompleteView,
+  BreakView,
+  FinishView,
+} from "../components/focus-views";
 import { useGetStartedSession, useMoveTask } from "../lib/api-hooks";
 
-type Phase = "loading" | "empty" | "task" | "break" | "finish";
+type Phase = "loading" | "empty" | "task" | "break" | "areaComplete" | "finish";
 
 interface RunState {
   phase: Phase;
@@ -24,7 +29,8 @@ type RunAction =
   | { type: "loaded"; session: Task[]; now: number }
   | { type: "complete"; now: number; workMs: number }
   | { type: "endBreak"; now: number }
-  | { type: "abandon"; now: number };
+  | { type: "abandon"; now: number }
+  | { type: "continueSession"; session: Task[]; now: number };
 
 const INITIAL: RunState = {
   phase: "loading",
@@ -54,8 +60,9 @@ function reducer(state: RunState, action: RunAction): RunState {
     case "complete": {
       const completed = state.completed + 1;
       const next = state.index + 1;
+      // Last task in the current area → offer Continue/Finish before ending the run.
       if (next >= state.session.length) {
-        return { ...state, phase: "finish", completed, finishedAt: action.now };
+        return { ...state, phase: "areaComplete", completed };
       }
       const dueForBreak = action.now - state.sinceBreakAt >= action.workMs;
       return {
@@ -76,6 +83,18 @@ function reducer(state: RunState, action: RunAction): RunState {
       };
     case "abandon":
       return { ...state, phase: "finish", finishedAt: action.now };
+    case "continueSession":
+      // Carry stats forward; just swap in the new session and restart the task loop.
+      if (action.session.length === 0) {
+        return { ...state, phase: "finish", finishedAt: action.now };
+      }
+      return {
+        ...state,
+        phase: "task",
+        session: action.session,
+        index: 0,
+        segmentStartedAt: action.now,
+      };
   }
 }
 
@@ -93,6 +112,7 @@ export function FocusRunScreen() {
   const [state, dispatch] = useReducer(reducer, INITIAL);
   const [now, setNow] = useState(() => Date.now());
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [continuing, setContinuing] = useState(false);
 
   useEffect(() => {
     if (state.phase === "loading" && session.data) {
@@ -116,6 +136,20 @@ export function FocusRunScreen() {
     const task = state.session[state.index];
     if (task) moveTask.mutate({ id: task.id, input: { lane: "done" } });
     dispatch({ type: "complete", now: Date.now(), workMs });
+  }
+
+  async function continueWithNextArea() {
+    setContinuing(true);
+    try {
+      const result = await session.refetch();
+      dispatch({
+        type: "continueSession",
+        session: result.data ?? [],
+        now: Date.now(),
+      });
+    } finally {
+      setContinuing(false);
+    }
   }
 
   function confirmAbandon() {
@@ -174,6 +208,14 @@ export function FocusRunScreen() {
           remainingMs={breakMs - (now - state.segmentStartedAt)}
           onResume={() => dispatch({ type: "endBreak", now: Date.now() })}
           onAbandon={() => setConfirmOpen(true)}
+        />
+      )}
+      {state.phase === "areaComplete" && (
+        <AreaCompleteView
+          completed={state.completed}
+          onContinue={continueWithNextArea}
+          onFinish={() => dispatch({ type: "abandon", now: Date.now() })}
+          continuing={continuing}
         />
       )}
       {state.phase === "finish" && (

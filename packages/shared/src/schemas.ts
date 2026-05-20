@@ -42,7 +42,7 @@ export const breakdownStepSchema = z.object({
 export const acceptBreakdownSchema = z.object({
   projectTitle: z.string().trim().min(1).max(200),
   area: z.string().trim().min(1).max(60),
-  steps: z.array(breakdownStepSchema).min(1).max(20),
+  steps: z.array(breakdownStepSchema).min(1).max(50),
 });
 export type AcceptBreakdownInput = z.infer<typeof acceptBreakdownSchema>;
 

@@ -155,6 +155,54 @@ export function BreakView({ remainingMs, onResume, onAbandon }: BreakViewProps) 
   );
 }
 
+interface AreaCompleteViewProps {
+  completed: number;
+  onContinue: () => void;
+  onFinish: () => void;
+  continuing?: boolean;
+}
+
+export function AreaCompleteView({
+  completed,
+  onContinue,
+  onFinish,
+  continuing = false,
+}: AreaCompleteViewProps) {
+  return (
+    <Box sx={SCREEN}>
+      <Box sx={{ ...CENTER, gap: 1.5 }}>
+        <Typography variant="h3" sx={{ fontWeight: 800 }}>
+          On a roll!
+        </Typography>
+        <Typography color="text.secondary">
+          {completed === 1 ? "1 task done so far" : `${completed} tasks done so far`}
+        </Typography>
+        <Typography sx={{ mt: 2, fontWeight: 500 }}>
+          Keep going with the next area, or wrap it up?
+        </Typography>
+      </Box>
+      <Stack spacing={1}>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={onContinue}
+          disabled={continuing}
+          sx={{ py: 1.8, fontSize: 18 }}
+        >
+          {continuing ? "Loading next area…" : "Continue"}
+        </Button>
+        <Button
+          onClick={onFinish}
+          disabled={continuing}
+          sx={{ color: "text.secondary" }}
+        >
+          Finish
+        </Button>
+      </Stack>
+    </Box>
+  );
+}
+
 interface FinishViewProps {
   completed: number;
   totalElapsedMs: number;
