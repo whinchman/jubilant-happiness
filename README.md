@@ -10,7 +10,7 @@ tiny ≤10-minute steps, and a focus mode walks you through them **one at a time
 
 ## Features
 
-- **Kanban board** — 4 lanes (Backlog → Ready → Doing → Done) with touch + mouse drag-and-drop
+- **Kanban board** — 3 lanes (Ready → Doing → Done) with touch + mouse drag-and-drop
 - **AI task breakdown** — a big task becomes a set of editable, ordered ≤10-minute steps
 - **Get Started focus flow** — one task on screen at a time, a stopwatch, work/break intervals,
   and an end-of-session summary

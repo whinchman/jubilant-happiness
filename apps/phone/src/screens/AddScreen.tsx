@@ -163,6 +163,8 @@ export function AddScreen() {
                 freeSolo
                 fullWidth
                 options={areas.data ?? []}
+                value={manualArea}
+                onChange={(_, value) => setManualArea(value ?? "")}
                 inputValue={manualArea}
                 onInputChange={(_, value) => setManualArea(value)}
                 renderInput={(params) => (

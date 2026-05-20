@@ -1,4 +1,4 @@
-import { Box, Button, Chip, LinearProgress, Stack, Typography } from "@mui/material";
+import { Box, Button, Chip, Stack, Typography } from "@mui/material";
 import type { Task } from "@todoer/shared";
 import { formatClock, formatMinutes } from "../lib/format";
 
@@ -21,8 +21,6 @@ const CENTER = {
 
 interface ActiveTaskViewProps {
   task: Task;
-  position: number;
-  total: number;
   elapsedMs: number;
   onComplete: () => void;
   onAbandon: () => void;
@@ -30,22 +28,35 @@ interface ActiveTaskViewProps {
 
 export function ActiveTaskView({
   task,
-  position,
-  total,
   elapsedMs,
   onComplete,
   onAbandon,
 }: ActiveTaskViewProps) {
+  const estimateMs = task.estimateMinutes * 60_000;
+  const progress = Math.max(0, 1 - elapsedMs / estimateMs);
+  const overtime = elapsedMs >= estimateMs;
+  // 100–80% pure green; 80–40% green→yellow; 40–0% yellow→red.
+  const hue = Math.min(120, 150 * progress);
+  const barColor = `hsl(${hue}, 75%, 47%)`;
+
   return (
     <Box sx={SCREEN}>
-      <Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Task {position} of {total}
+      <Box sx={{ textAlign: "center" }}>
+        <Typography
+          variant="overline"
+          sx={{ color: "text.secondary", fontWeight: 600 }}
+        >
+          Current Task
         </Typography>
-        <LinearProgress
-          variant="determinate"
-          value={((position - 1) / total) * 100}
-          sx={{ borderRadius: 1, height: 6 }}
+        <Box
+          sx={{
+            height: 4,
+            width: 56,
+            mx: "auto",
+            mt: 0.5,
+            bgcolor: "primary.main",
+            borderRadius: 999,
+          }}
         />
       </Box>
 
@@ -55,12 +66,40 @@ export function ActiveTaskView({
           {task.title}
         </Typography>
         <Typography color="text.secondary">about {task.estimateMinutes} min</Typography>
-        <Typography
-          variant="h2"
-          sx={{ fontVariantNumeric: "tabular-nums", color: "text.secondary", mt: 1 }}
-        >
-          {formatClock(elapsedMs)}
-        </Typography>
+        {overtime ? (
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: 900,
+              color: "error.main",
+              mt: 2,
+              letterSpacing: 1,
+            }}
+          >
+            OVERTIME!
+          </Typography>
+        ) : (
+          <Box sx={{ width: "100%", maxWidth: 420, mt: 2 }}>
+            <Box
+              sx={{
+                width: "100%",
+                height: 18,
+                bgcolor: "rgba(0,0,0,0.08)",
+                borderRadius: 999,
+                overflow: "hidden",
+              }}
+            >
+              <Box
+                sx={{
+                  width: `${progress * 100}%`,
+                  height: "100%",
+                  bgcolor: barColor,
+                  transition: "width 1s linear, background-color 1s linear",
+                }}
+              />
+            </Box>
+          </Box>
+        )}
       </Box>
 
       <Stack spacing={1}>

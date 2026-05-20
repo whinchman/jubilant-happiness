@@ -50,7 +50,7 @@ export const breakdownRoutes: FastifyPluginAsync = async (app) => {
       .values({ id: projectId, userId: req.userId, title: projectTitle, createdAt: now })
       .run();
 
-    let position = endPosition(req.userId, "backlog");
+    let position = endPosition(req.userId, "ready");
     const created = steps.map((step) => {
       const row = db
         .insert(tasks)
@@ -62,9 +62,9 @@ export const breakdownRoutes: FastifyPluginAsync = async (app) => {
           notes: "",
           area,
           estimateMinutes: step.estimateMinutes,
-          lane: "backlog",
+          lane: "ready",
           position,
-          isRepeating: false,
+          isRepeating: step.isRepeating ?? false,
           lastCompletedAt: null,
           completedAt: null,
           createdAt: now,

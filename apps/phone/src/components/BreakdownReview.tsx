@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import RepeatIcon from "@mui/icons-material/Repeat";
 import {
   Alert,
   Autocomplete,
@@ -9,6 +10,7 @@ import {
   IconButton,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import type { AcceptBreakdownInput, BreakdownPreview } from "@todoer/shared";
@@ -17,6 +19,7 @@ interface EditableStep {
   key: string;
   title: string;
   estimate: string;
+  isRepeating: boolean;
 }
 
 interface BreakdownReviewProps {
@@ -46,6 +49,7 @@ export function BreakdownReview({
       key: nextKey(),
       title: s.title,
       estimate: String(s.estimateMinutes),
+      isRepeating: false,
     })),
   );
 
@@ -56,11 +60,18 @@ export function BreakdownReview({
     setSteps((prev) => prev.filter((s) => s.key !== key));
   }
   function addStep() {
-    setSteps((prev) => [...prev, { key: nextKey(), title: "", estimate: "5" }]);
+    setSteps((prev) => [
+      ...prev,
+      { key: nextKey(), title: "", estimate: "5", isRepeating: false },
+    ]);
   }
 
   const validSteps = steps
-    .map((s) => ({ title: s.title.trim(), estimateMinutes: Number(s.estimate) }))
+    .map((s) => ({
+      title: s.title.trim(),
+      estimateMinutes: Number(s.estimate),
+      isRepeating: s.isRepeating,
+    }))
     .filter(
       (s) =>
         s.title.length > 0 &&
@@ -85,6 +96,8 @@ export function BreakdownReview({
       <Autocomplete
         freeSolo
         options={areas}
+        value={area}
+        onChange={(_, value) => setArea(value ?? "")}
         inputValue={area}
         onInputChange={(_, value) => setArea(value)}
         renderInput={(params) => <TextField {...params} label="Area" />}
@@ -118,6 +131,23 @@ export function BreakdownReview({
               size="small"
               sx={{ width: 78 }}
             />
+            <Tooltip
+              title={step.isRepeating ? "Repeats weekly" : "Tap if this repeats weekly"}
+            >
+              <IconButton
+                onClick={() =>
+                  updateStep(step.key, { isRepeating: !step.isRepeating })
+                }
+                aria-label="Repeats weekly"
+                size="small"
+                sx={{
+                  mt: 0.5,
+                  color: step.isRepeating ? "primary.main" : "text.disabled",
+                }}
+              >
+                <RepeatIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
             <IconButton
               onClick={() => removeStep(step.key)}
               aria-label="Remove step"
@@ -149,7 +179,7 @@ export function BreakdownReview({
             })
           }
         >
-          Add {validSteps.length} {validSteps.length === 1 ? "task" : "tasks"} to backlog
+          Add {validSteps.length} {validSteps.length === 1 ? "task" : "tasks"} to Ready
         </Button>
       </Stack>
     </Box>

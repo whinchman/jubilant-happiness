@@ -13,7 +13,7 @@ export const boardRoutes: FastifyPluginAsync = async (app) => {
       .orderBy(asc(tasks.position))
       .all();
 
-    const board: Board = { backlog: [], ready: [], doing: [], done: [] };
+    const board: Board = { ready: [], doing: [], done: [] };
     for (const row of rows) {
       board[row.lane].push(row);
     }

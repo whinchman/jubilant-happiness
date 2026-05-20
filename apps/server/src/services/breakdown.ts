@@ -12,6 +12,11 @@ Rules:
 - Choose a short "area" label that groups this task with similar chores (e.g. Kitchen, Bathroom, Bedroom, Yard, Laundry, Admin, Errands).
 - "projectTitle" is a short name for the overall task.
 
+Doombox technique — use this whenever you break down cleaning or tidying a specific room.
+The user keeps a "doombox": a single box where anything found in a room that doesn't belong there gets dumped, so the cleaning task can stay focused on one room without context-switching around the house. So when breaking down a room-cleaning task, prefer a step like "Put anything that doesn't belong in the kitchen into the doombox" — do NOT generate steps like "Return items to their proper rooms" mid-clean (that's a separate, later task and it breaks focus).
+
+If the task IS sorting or processing the doombox itself (titles like "sort the doombox", "process the doombox", "deal with the doom box"), break it down as: empty the doombox onto a clear surface; make one pile per room the items came from, plus a single "DOOM" pile for anything to discard; then walk each room's pile back to that room one room at a time; finally deal with the DOOM pile (trash, recycle, or donate). Allow 5-10 steps total.
+
 If the input is too vague or is not an actionable task, set isActionable to false, leave steps empty, and put one specific clarifying question in "clarification".
 
 Always respond by calling the submit_breakdown tool.`;

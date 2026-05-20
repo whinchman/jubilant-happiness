@@ -36,6 +36,7 @@ export type BreakdownRequest = z.infer<typeof breakdownRequestSchema>;
 export const breakdownStepSchema = z.object({
   title: z.string().trim().min(1).max(200),
   estimateMinutes: z.number().int().min(1).max(240),
+  isRepeating: z.boolean().optional(),
 });
 
 export const acceptBreakdownSchema = z.object({

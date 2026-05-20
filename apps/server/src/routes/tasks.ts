@@ -25,7 +25,7 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(400).send({ error: "invalid_input", issues: parsed.error.issues });
     }
     const input = parsed.data;
-    const lane = input.lane ?? "backlog";
+    const lane = input.lane ?? "ready";
     const now = Date.now();
     const row = db
       .insert(tasks)

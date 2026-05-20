@@ -164,8 +164,6 @@ export function FocusRunScreen() {
       {state.phase === "task" && current && (
         <ActiveTaskView
           task={current}
-          position={state.index + 1}
-          total={state.session.length}
           elapsedMs={now - state.segmentStartedAt}
           onComplete={completeCurrent}
           onAbandon={() => setConfirmOpen(true)}

@@ -110,6 +110,8 @@ export function EditTaskDialog({ task, onClose }: EditTaskDialogProps) {
             <Autocomplete
               freeSolo
               options={areas.data ?? []}
+              value={area}
+              onChange={(_, value) => setArea(value ?? "")}
               inputValue={area}
               onInputChange={(_, value) => setArea(value)}
               renderInput={(params) => (

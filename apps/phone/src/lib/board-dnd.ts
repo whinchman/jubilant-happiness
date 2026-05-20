@@ -72,7 +72,6 @@ export function computeMove(
       : { lane: toLane };
 
   const nextBoard: Board = {
-    backlog: board.backlog,
     ready: board.ready,
     doing: board.doing,
     done: board.done,

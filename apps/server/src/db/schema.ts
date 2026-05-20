@@ -36,7 +36,7 @@ export const tasks = sqliteTable(
     area: text("area"),
     estimateMinutes: integer("estimate_minutes").notNull(),
     lane: text("lane", {
-      enum: ["backlog", "ready", "doing", "done"] as const,
+      enum: ["ready", "doing", "done"] as const,
     }).notNull(),
     position: real("position").notNull(),
     isRepeating: integer("is_repeating", { mode: "boolean" })

@@ -21,13 +21,14 @@ function task(id: string, lane: Lane): Task {
 }
 
 function board(partial: Partial<Board>): Board {
-  return { backlog: [], ready: [], doing: [], done: [], ...partial };
+  return { ready: [], doing: [], done: [], ...partial };
 }
 
 describe("isLane", () => {
   it("recognizes lane ids and rejects others", () => {
-    expect(isLane("backlog")).toBe(true);
+    expect(isLane("ready")).toBe(true);
     expect(isLane("done")).toBe(true);
+    expect(isLane("backlog")).toBe(false);
     expect(isLane("some-uuid")).toBe(false);
   });
 });
@@ -42,31 +43,31 @@ describe("findLane", () => {
 
 describe("computeMove", () => {
   it("moves a task into an empty lane (dropped on the lane)", () => {
-    const b = board({ backlog: [task("a", "backlog")] });
-    const result = computeMove(b, "a", "backlog", "ready", "ready");
-    expect(result?.board.backlog).toHaveLength(0);
-    expect(result?.board.ready.map((t) => t.id)).toEqual(["a"]);
-    expect(result?.input).toEqual({ lane: "ready" });
+    const b = board({ ready: [task("a", "ready")] });
+    const result = computeMove(b, "a", "ready", "doing", "doing");
+    expect(result?.board.ready).toHaveLength(0);
+    expect(result?.board.doing.map((t) => t.id)).toEqual(["a"]);
+    expect(result?.input).toEqual({ lane: "doing" });
   });
 
   it("anchors with afterId when dropped onto a card mid-lane", () => {
     const b = board({
-      ready: [task("x", "ready"), task("y", "ready")],
-      backlog: [task("a", "backlog")],
+      doing: [task("x", "doing"), task("y", "doing")],
+      ready: [task("a", "ready")],
     });
-    const result = computeMove(b, "a", "backlog", "ready", "y");
-    expect(result?.board.ready.map((t) => t.id)).toEqual(["x", "a", "y"]);
-    expect(result?.input).toEqual({ lane: "ready", afterId: "x" });
+    const result = computeMove(b, "a", "ready", "doing", "y");
+    expect(result?.board.doing.map((t) => t.id)).toEqual(["x", "a", "y"]);
+    expect(result?.input).toEqual({ lane: "doing", afterId: "x" });
   });
 
   it("anchors with beforeId when dropped at the start of a lane", () => {
     const b = board({
-      ready: [task("x", "ready")],
-      backlog: [task("a", "backlog")],
+      doing: [task("x", "doing")],
+      ready: [task("a", "ready")],
     });
-    const result = computeMove(b, "a", "backlog", "ready", "x");
-    expect(result?.board.ready.map((t) => t.id)).toEqual(["a", "x"]);
-    expect(result?.input).toEqual({ lane: "ready", beforeId: "x" });
+    const result = computeMove(b, "a", "ready", "doing", "x");
+    expect(result?.board.doing.map((t) => t.id)).toEqual(["a", "x"]);
+    expect(result?.input).toEqual({ lane: "doing", beforeId: "x" });
   });
 
   it("reorders within a single lane", () => {
@@ -79,8 +80,8 @@ describe("computeMove", () => {
   });
 
   it("stamps the moved task with its destination lane", () => {
-    const b = board({ backlog: [task("a", "backlog")] });
-    const result = computeMove(b, "a", "backlog", "done", "done");
+    const b = board({ ready: [task("a", "ready")] });
+    const result = computeMove(b, "a", "ready", "done", "done");
     expect(result?.board.done[0]?.lane).toBe("done");
   });
 });

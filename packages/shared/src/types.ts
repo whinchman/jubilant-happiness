@@ -1,4 +1,4 @@
-export const LANES = ["backlog", "ready", "doing", "done"] as const;
+export const LANES = ["ready", "doing", "done"] as const;
 export type Lane = (typeof LANES)[number];
 
 export interface Task {
@@ -25,7 +25,6 @@ export interface Project {
 }
 
 export interface Board {
-  backlog: Task[];
   ready: Task[];
   doing: Task[];
   done: Task[];

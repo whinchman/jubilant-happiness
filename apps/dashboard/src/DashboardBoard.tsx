@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchBoard, LANES, type Lane, type Task } from "@todoer/shared";
 
 const LABELS: Record<Lane, string> = {
-  backlog: "Backlog",
   ready: "Ready",
   doing: "Doing",
   done: "Done",

@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import {
-  closestCorners,
+  pointerWithin,
   DndContext,
   DragOverlay,
   MouseSensor,
@@ -30,7 +30,6 @@ import { useBoard, useMoveTask } from "../lib/api-hooks";
 import { computeMove, findLane, findTaskInBoard, isLane } from "../lib/board-dnd";
 
 const LANE_LABELS: Record<LaneId, string> = {
-  backlog: "Backlog",
   ready: "Ready",
   doing: "Doing",
   done: "Done",
@@ -122,7 +121,7 @@ export function BoardScreen() {
         {boardData && (
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCorners}
+            collisionDetection={pointerWithin}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDragCancel={() => setActiveId(null)}
@@ -132,6 +131,7 @@ export function BoardScreen() {
                 display: "flex",
                 gap: 1.5,
                 height: "100%",
+                justifyContent: "safe center",
                 overflowX: "auto",
                 overflowY: "hidden",
                 pb: 1,
