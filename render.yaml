@@ -1,0 +1,34 @@
+# Render Blueprint for TODO-ER.
+# Spec: https://render.com/docs/blueprint-spec
+#
+# Provisions a single Web Service that builds the phone PWA and serves it alongside the API on
+# the same origin, plus a 1GB persistent disk for the SQLite database.
+#
+# After Render reads this on first deploy:
+#   1. Paste ANTHROPIC_API_KEY into the service's Environment tab (sync: false).
+#   2. SESSION_SECRET is auto-generated.
+#   3. Add the custom domain (e.g. todoer.217industries.com) in Settings → Custom Domains.
+
+services:
+  - type: web
+    name: todoer
+    runtime: docker
+    dockerfilePath: ./apps/server/Dockerfile
+    dockerContext: .
+    plan: starter            # required for persistent-disk support
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false           # set manually in the Render dashboard
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-4-6
+      - key: SESSION_SECRET
+        generateValue: true   # Render auto-generates a strong secret
+      - key: DATABASE_PATH
+        value: /var/data/todoer.sqlite
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: todoer-data
+      mountPath: /var/data
+      sizeGB: 1

@@ -18,7 +18,7 @@ tiny ≤10-minute steps, and a focus mode walks you through them **one at a time
   chores to the front of a focus session
 - **Areas** — tasks are grouped (Kitchen, Yard…) so a focus session stays coherent
 - **TV dashboard** — a separate, read-only big-screen board that auto-refreshes
-- **Installable PWA**, **username/password auth**, fully **Dockerized**
+- **Installable PWA**, **username/password auth**
 
 ## Stack
 
@@ -31,7 +31,7 @@ tiny ≤10-minute steps, and a focus mode walks you through them **one at a time
 | Frontend     | React 19, Vite 8, MUI v9, TanStack Query 5, React Router 7 |
 | Drag & drop  | dnd-kit |
 | PWA          | vite-plugin-pwa |
-| Deploy       | Docker Compose + nginx; Tailscale for HTTPS |
+| Deploy       | Render.com (Docker); Docker Compose available as a homelab alternative |
 
 ## Project structure
 
@@ -42,15 +42,15 @@ apps/dashboard   Read-only big-screen board for a TV / monitor
 packages/shared  Shared TypeScript types, zod schemas, and the typed API client
 ```
 
-The frontends call a relative `/api`; in dev the Vite dev server proxies it to the API, in
-production nginx does. The server runs database migrations and the weekly reset on boot.
+The phone calls a relative `/api`; in dev the Vite dev server proxies it to the API, in production
+the server serves both the API and the built phone PWA on the same origin.
 
 ## Prerequisites
 
 - Node.js **22.12+**
 - **pnpm 10+** (`npm install -g pnpm`)
 - An **Anthropic API key** — for the AI breakdown
-- Docker — only for deployment (optional)
+- Docker — only for the self-host alternative (optional)
 
 ## Setup
 
@@ -94,22 +94,43 @@ Read from `.env` (repo root). See [`.env.example`](./.env.example).
 | `ANTHROPIC_API_KEY`  | yes      | Powers the AI breakdown |
 | `ANTHROPIC_MODEL`    | no       | Default `claude-sonnet-4-6` |
 | `SESSION_SECRET`     | deploy   | Session cookie encryption — set a long random string |
+| `NODE_ENV`           | deploy   | Set to `production` so the server serves the phone PWA + secure cookies |
 | `DATABASE_PATH`      | no       | SQLite file location (default `data/todoer.sqlite`) |
 | `PORT` / `HOST`      | no       | Server bind address |
 | `PHONE_PORT` / `DASHBOARD_PORT` | no | Docker host ports (default 8190 / 8191) |
 
 ## Deployment
 
+TODO-ER deploys to **Render.com** as a single Web Service that builds the phone PWA and serves it
+alongside the API at one custom domain — no separate static host, no CORS, the session cookie just
+works.
+
+1. Push the repo to a Git host (GitHub / GitLab) that Render can read.
+2. In Render, **New → Blueprint** → connect the repo. Render reads [`render.yaml`](./render.yaml)
+   and provisions the service plus a 1GB persistent disk.
+3. After it provisions, paste secrets in **Environment**:
+   - `ANTHROPIC_API_KEY` — your Anthropic key.
+   - `SESSION_SECRET`, `ANTHROPIC_MODEL`, `NODE_ENV`, and `DATABASE_PATH` are set by the blueprint.
+4. **Settings → Custom Domains** → add e.g. `todoer.217industries.com`. Render shows a CNAME target.
+5. In your DNS, add a `todoer` CNAME record pointing to Render's target. Render auto-issues SSL via
+   Let's Encrypt once the CNAME resolves.
+6. Open `https://todoer.217industries.com` → fresh database → Setup screen → create your account.
+
+**Cost:** Render's Starter plan (~$7/month) is required — the free plan sleeps and has no
+persistent disk.
+
+### Self-host alternative (Docker + Tailscale)
+
+The Docker Compose setup is still in the repo for a homelab install:
+
 ```bash
 # 1. Set ANTHROPIC_API_KEY and SESSION_SECRET in .env
-# 2. Build and start the stack
 docker compose up -d --build
 ```
 
-Three containers come up: the API server (internal), the phone app on **:8190**, and the
-dashboard on **:8191**. The SQLite database lives in the `todoer-data` Docker volume.
-
-For HTTPS — required for installing the PWA to a phone home screen — put Tailscale in front:
+Three containers come up: the API server (internal), the phone app on `:8190`, and the dashboard
+on `:8191`, with the SQLite database in the `todoer-data` Docker volume. For HTTPS — required to
+install the PWA on a phone home screen — put Tailscale in front:
 
 ```bash
 tailscale serve --bg 8190
@@ -125,5 +146,6 @@ staleness scoring; the phone suite covers the drag-and-drop **fractional-positio
 
 ## Data
 
-A single SQLite file holds everything (`apps/server/data/todoer.sqlite` in dev, the
-`todoer-data` volume in Docker). Back it up by copying that file.
+A single SQLite file holds everything (`apps/server/data/todoer.sqlite` in dev, the `todoer-data`
+Docker volume in compose, the Render persistent disk at `/var/data/todoer.sqlite` in production).
+Back it up by copying that file.
