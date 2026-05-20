@@ -7,8 +7,10 @@ import {
   Autocomplete,
   Box,
   Button,
+  FormControlLabel,
   IconButton,
   Stack,
+  Switch,
   TextField,
   Tooltip,
   Typography,
@@ -66,6 +68,12 @@ export function BreakdownReview({
     ]);
   }
 
+  const allRepeating = steps.length > 0 && steps.every((s) => s.isRepeating);
+  function toggleAllRepeating() {
+    const next = !allRepeating;
+    setSteps((prev) => prev.map((s) => ({ ...s, isRepeating: next })));
+  }
+
   const validSteps = steps
     .map((s) => ({
       title: s.title.trim(),
@@ -102,9 +110,32 @@ export function BreakdownReview({
         onInputChange={(_, value) => setArea(value)}
         renderInput={(params) => <TextField {...params} label="Area" />}
       />
-      <Typography variant="subtitle2" color="text.secondary">
-        Steps ({validSteps.length})
-      </Typography>
+      <Stack
+        direction="row"
+        sx={{ justifyContent: "space-between", alignItems: "center" }}
+      >
+        <Typography variant="subtitle2" color="text.secondary">
+          Steps ({validSteps.length})
+        </Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={allRepeating}
+              onChange={toggleAllRepeating}
+              size="small"
+            />
+          }
+          label="Repeat all weekly"
+          labelPlacement="start"
+          sx={{
+            ml: 0,
+            "& .MuiFormControlLabel-label": {
+              fontSize: 14,
+              color: "text.secondary",
+            },
+          }}
+        />
+      </Stack>
       <Stack spacing={1}>
         {steps.map((step, index) => (
           <Stack

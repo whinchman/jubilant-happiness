@@ -51,7 +51,7 @@ describe("selectGetStartedSession", () => {
     expect(selectGetStartedSession([], NOW)).toEqual([]);
   });
 
-  it("anchors on one area and orders it easiest-first", () => {
+  it("anchors on one area and walks it in Ready-lane (position) order", () => {
     const tasks = [
       task({ id: "k-big", area: "Kitchen", estimateMinutes: 10, position: 1 }),
       task({ id: "k-small", area: "Kitchen", estimateMinutes: 3, position: 2 }),
@@ -59,11 +59,12 @@ describe("selectGetStartedSession", () => {
       task({ id: "y-2", area: "Yard", estimateMinutes: 6, position: 4 }),
       task({ id: "y-3", area: "Yard", estimateMinutes: 7, position: 5 }),
     ];
-    // Seed is the easiest task (k-small) -> Kitchen anchors, but it only has
-    // 2 tasks (<3), so the next area (Yard) is borrowed.
+    // Seed is the easiest task (k-small) → Kitchen anchors, but it only has 2 tasks (<3),
+    // so Yard is borrowed. Within each area we walk in position order so AI-breakdown
+    // sequence ("get supplies", *then* "do the thing") is preserved.
     expect(selectGetStartedSession(tasks, NOW).map((t) => t.id)).toEqual([
-      "k-small",
       "k-big",
+      "k-small",
       "y-1",
       "y-2",
       "y-3",
