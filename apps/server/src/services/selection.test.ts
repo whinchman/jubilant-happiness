@@ -10,6 +10,7 @@ function task(over: Partial<Task> & { id: string }): Task {
     id: over.id,
     userId: "u",
     projectId: over.projectId ?? null,
+    parentId: over.parentId ?? null,
     title: over.title ?? over.id,
     notes: "",
     area: over.area ?? null,

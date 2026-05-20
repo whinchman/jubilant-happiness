@@ -18,6 +18,14 @@ function findTask(userId: string, id: string) {
     .get();
 }
 
+function findChore(userId: string, id: string) {
+  const row = findTask(userId, id);
+  // Step rows are addressed via `/tasks/:choreId/steps/:stepId`; the chore-level
+  // routes refuse them so a step never accidentally gets dragged across lanes.
+  if (!row || row.parentId !== null) return null;
+  return row;
+}
+
 export const taskRoutes: FastifyPluginAsync = async (app) => {
   app.post("/tasks", async (req, reply) => {
     const parsed = createTaskSchema.safeParse(req.body);
@@ -50,7 +58,7 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.patch<{ Params: { id: string } }>("/tasks/:id", async (req, reply) => {
-    const existing = findTask(req.userId, req.params.id);
+    const existing = findChore(req.userId, req.params.id);
     if (!existing) return reply.code(404).send({ error: "not_found" });
 
     const parsed = updateTaskSchema.safeParse(req.body);
@@ -68,14 +76,17 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.delete<{ Params: { id: string } }>("/tasks/:id", async (req, reply) => {
-    const existing = findTask(req.userId, req.params.id);
+    const existing = findChore(req.userId, req.params.id);
     if (!existing) return reply.code(404).send({ error: "not_found" });
+    // The DB FK is NO ACTION (SQLite ADD COLUMN can't carry CASCADE), so steps
+    // must be cleared explicitly before the chore — otherwise the FK rejects.
+    db.delete(tasks).where(eq(tasks.parentId, req.params.id)).run();
     db.delete(tasks).where(eq(tasks.id, req.params.id)).run();
     return reply.code(204).send();
   });
 
   app.post<{ Params: { id: string } }>("/tasks/:id/move", async (req, reply) => {
-    const existing = findTask(req.userId, req.params.id);
+    const existing = findChore(req.userId, req.params.id);
     if (!existing) return reply.code(404).send({ error: "not_found" });
 
     const parsed = moveTaskSchema.safeParse(req.body);

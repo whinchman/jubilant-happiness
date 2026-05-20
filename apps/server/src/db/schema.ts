@@ -1,4 +1,11 @@
-import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  type AnySQLiteColumn,
+  index,
+  integer,
+  real,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -31,6 +38,9 @@ export const tasks = sqliteTable(
     projectId: text("project_id").references(() => projects.id, {
       onDelete: "set null",
     }),
+    // Self-FK with default NO ACTION: SQLite's ALTER TABLE ADD COLUMN can't add
+    // a cascading FK, so the chore-delete route explicitly removes steps first.
+    parentId: text("parent_id").references((): AnySQLiteColumn => tasks.id),
     title: text("title").notNull(),
     notes: text("notes").notNull().default(""),
     area: text("area"),
@@ -51,6 +61,7 @@ export const tasks = sqliteTable(
     index("idx_tasks_area").on(t.area),
     index("idx_tasks_project").on(t.projectId),
     index("idx_tasks_repeating").on(t.isRepeating, t.lastCompletedAt),
+    index("idx_tasks_parent").on(t.parentId, t.position),
   ],
 );
 

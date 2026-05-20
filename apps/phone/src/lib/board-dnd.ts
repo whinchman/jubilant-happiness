@@ -1,25 +1,28 @@
 import {
   LANES,
   type Board,
+  type ChoreWithSteps,
   type Lane,
   type MoveTaskInput,
-  type Task,
 } from "@todoer/shared";
 
 export function isLane(id: string): id is Lane {
   return (LANES as readonly string[]).includes(id);
 }
 
-export function findLane(board: Board, taskId: string): Lane | null {
+export function findLane(board: Board, choreId: string): Lane | null {
   for (const lane of LANES) {
-    if (board[lane].some((t) => t.id === taskId)) return lane;
+    if (board[lane].some((c) => c.id === choreId)) return lane;
   }
   return null;
 }
 
-export function findTaskInBoard(board: Board, taskId: string): Task | null {
+export function findChoreInBoard(
+  board: Board,
+  choreId: string,
+): ChoreWithSteps | null {
   for (const lane of LANES) {
-    const found = board[lane].find((t) => t.id === taskId);
+    const found = board[lane].find((c) => c.id === choreId);
     if (found) return found;
   }
   return null;
@@ -32,8 +35,9 @@ export interface PlannedMove {
 
 /**
  * Given a drag of `activeId` (currently in `fromLane`) dropped over `overId` —
- * a sibling task id, or a lane id when dropped on empty lane space — returns the
- * reordered board and the move payload (an afterId/beforeId anchor for the API).
+ * a sibling chore id, or a lane id when dropped on empty lane space — returns
+ * the reordered board and the move payload (an afterId/beforeId anchor for the
+ * API). Steps embedded in the moved chore are carried along untouched.
  */
 export function computeMove(
   board: Board,
@@ -42,24 +46,24 @@ export function computeMove(
   toLane: Lane,
   overId: string,
 ): PlannedMove | null {
-  const activeTask = board[fromLane].find((t) => t.id === activeId);
-  if (!activeTask) return null;
+  const activeChore = board[fromLane].find((c) => c.id === activeId);
+  if (!activeChore) return null;
 
-  const sourceWithout = board[fromLane].filter((t) => t.id !== activeId);
+  const sourceWithout = board[fromLane].filter((c) => c.id !== activeId);
   const destWithout = toLane === fromLane ? sourceWithout : board[toLane];
 
   let insertAt: number;
   if (isLane(overId)) {
     insertAt = destWithout.length;
   } else {
-    const overIndex = destWithout.findIndex((t) => t.id === overId);
+    const overIndex = destWithout.findIndex((c) => c.id === overId);
     insertAt = overIndex === -1 ? destWithout.length : overIndex;
   }
 
-  const movedTask: Task = { ...activeTask, lane: toLane };
+  const movedChore: ChoreWithSteps = { ...activeChore, lane: toLane };
   const destWith = [
     ...destWithout.slice(0, insertAt),
-    movedTask,
+    movedChore,
     ...destWithout.slice(insertAt),
   ];
 

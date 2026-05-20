@@ -1,17 +1,17 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Box, Paper, Stack, Typography } from "@mui/material";
-import type { Lane as LaneId, Task } from "@todoer/shared";
+import type { ChoreWithSteps, Lane as LaneId } from "@todoer/shared";
 import { SortableTaskCard } from "./SortableTaskCard";
 
 interface LaneProps {
   laneId: LaneId;
   title: string;
-  tasks: Task[];
-  onTaskClick: (task: Task) => void;
+  chores: ChoreWithSteps[];
+  onChoreClick: (chore: ChoreWithSteps) => void;
 }
 
-export function Lane({ laneId, title, tasks, onTaskClick }: LaneProps) {
+export function Lane({ laneId, title, chores, onChoreClick }: LaneProps) {
   const { setNodeRef, isOver } = useDroppable({ id: laneId });
 
   return (
@@ -33,24 +33,24 @@ export function Lane({ laneId, title, tasks, onTaskClick }: LaneProps) {
         variant="subtitle2"
         sx={{ px: 2, py: 1.5, fontWeight: 700, color: "text.secondary" }}
       >
-        {title} · {tasks.length}
+        {title} · {chores.length}
       </Typography>
       <SortableContext
-        items={tasks.map((t) => t.id)}
+        items={chores.map((c) => c.id)}
         strategy={verticalListSortingStrategy}
       >
         <Stack
           spacing={1}
           sx={{ px: 1, pb: 1, flexGrow: 1, overflowY: "auto", minHeight: 80 }}
         >
-          {tasks.map((task) => (
+          {chores.map((chore) => (
             <SortableTaskCard
-              key={task.id}
-              task={task}
-              onClick={() => onTaskClick(task)}
+              key={chore.id}
+              chore={chore}
+              onClick={() => onChoreClick(chore)}
             />
           ))}
-          {tasks.length === 0 && (
+          {chores.length === 0 && (
             <Box
               sx={{
                 p: 2,

@@ -28,6 +28,26 @@ export const moveTaskSchema = z.object({
 });
 export type MoveTaskInput = z.infer<typeof moveTaskSchema>;
 
+export const createStepSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  estimateMinutes: z.number().int().min(1).max(240),
+});
+export type CreateStepInput = z.infer<typeof createStepSchema>;
+
+export const updateStepSchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  estimateMinutes: z.number().int().min(1).max(240).optional(),
+  /** Toggle completion. true = check (sets completedAt = now). false = uncheck. */
+  completed: z.boolean().optional(),
+});
+export type UpdateStepInput = z.infer<typeof updateStepSchema>;
+
+export const moveStepSchema = z.object({
+  beforeId: z.string().optional(),
+  afterId: z.string().optional(),
+});
+export type MoveStepInput = z.infer<typeof moveStepSchema>;
+
 export const breakdownRequestSchema = z.object({
   text: z.string().trim().min(1).max(500),
 });
