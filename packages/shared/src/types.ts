@@ -48,4 +48,6 @@ export interface AuthStatus {
   needsSetup: boolean;
   /** True when the current session is logged in. */
   authenticated: boolean;
+  /** True when SETUP_TOKEN is set on the server — the Setup form must include a matching token. */
+  requiresSetupToken: boolean;
 }

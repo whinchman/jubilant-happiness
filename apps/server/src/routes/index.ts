@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import { ACCOUNT_ID } from "../auth";
 import { runWeeklyResetIfDue } from "../services/weekly-reset";
 import { areaRoutes } from "./areas";
 import { authRoutes } from "./auth";
@@ -20,10 +19,11 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
 
       await api.register(async (guarded) => {
         guarded.addHook("preHandler", async (req, reply) => {
-          if (req.session.get("authed") !== true) {
+          const userId = req.session.get("userId");
+          if (typeof userId !== "string") {
             return reply.code(401).send({ error: "unauthorized" });
           }
-          req.userId = ACCOUNT_ID;
+          req.userId = userId;
           runWeeklyResetIfDue();
         });
         await guarded.register(boardRoutes);

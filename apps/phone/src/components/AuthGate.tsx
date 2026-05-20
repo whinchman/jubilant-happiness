@@ -28,8 +28,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
 
-  if (status.data.needsSetup) return <AuthScreen mode="setup" />;
-  if (!status.data.authenticated) return <AuthScreen mode="login" />;
+  if (!status.data.authenticated) {
+    // Fresh deploy with no users → default to signup. Otherwise default to login (toggleable).
+    const defaultMode = status.data.needsSetup ? "setup" : "login";
+    return (
+      <AuthScreen
+        defaultMode={defaultMode}
+        requiresSetupToken={status.data.requiresSetupToken}
+      />
+    );
+  }
   return <>{children}</>;
 }
 

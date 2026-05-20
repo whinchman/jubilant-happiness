@@ -1,9 +1,9 @@
 import "./load-env";
 import { resolve } from "node:path";
+import rateLimit from "@fastify/rate-limit";
 import secureSession from "@fastify/secure-session";
 import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
-import { ensureAccount } from "./auth";
 import { runMigrations } from "./db/migrate";
 import { registerRoutes } from "./routes";
 import { runWeeklyResetIfDue } from "./services/weekly-reset";
@@ -13,7 +13,6 @@ const host = process.env.HOST || "0.0.0.0";
 const isProduction = process.env.NODE_ENV === "production";
 
 runMigrations();
-ensureAccount();
 runWeeklyResetIfDue();
 
 const app = Fastify({ logger: true });
@@ -33,6 +32,9 @@ await app.register(secureSession, {
     maxAge: 60 * 60 * 24 * 30,
   },
 });
+
+// Rate-limit plugin — opt-in per route via `config.rateLimit`.
+await app.register(rateLimit, { global: false });
 
 app.get("/health", async () => ({ ok: true, service: "todoer-server" }));
 

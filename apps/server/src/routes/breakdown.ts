@@ -7,7 +7,7 @@ import { endPosition } from "../lib/position";
 import { breakdownTask, type BreakdownOutcome } from "../services/breakdown";
 
 export const breakdownRoutes: FastifyPluginAsync = async (app) => {
-  app.post("/breakdown", async (req, reply) => {
+  app.post("/breakdown", { config: { rateLimit: { max: 30, timeWindow: "1 hour" } } }, async (req, reply) => {
     const parsed = breakdownRequestSchema.safeParse(req.body);
     if (!parsed.success) {
       return reply

@@ -1,33 +1,47 @@
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db } from "./db/client";
 import { users } from "./db/schema";
 
-/** Fixed id for the single account — stable so existing tasks stay attached. */
-export const ACCOUNT_ID = "dev-user";
-
 declare module "fastify" {
   interface FastifyRequest {
+    /** The id of the user owning this request — set by the guarded routes' preHandler. */
     userId: string;
   }
 }
 
 declare module "@fastify/secure-session" {
   interface SessionData {
-    authed: boolean;
+    /** The id of the logged-in user. Presence implies authenticated. */
+    userId: string;
   }
 }
 
-/** Ensures the single account row exists; credentials are filled in by setup. */
-export function ensureAccount(): void {
-  db.insert(users)
-    .values({ id: ACCOUNT_ID, username: "", passwordHash: "", createdAt: Date.now() })
-    .onConflictDoNothing()
-    .run();
+export function findUserByUsername(username: string) {
+  return db.select().from(users).where(eq(users.username, username)).get();
 }
 
-export function getAccount() {
-  return db.select().from(users).where(eq(users.id, ACCOUNT_ID)).get();
+export function findUserById(id: string) {
+  return db.select().from(users).where(eq(users.id, id)).get();
+}
+
+export function countUsers(): number {
+  return db.select().from(users).all().length;
+}
+
+export function createUser(input: { username: string; password: string }): {
+  id: string;
+} {
+  const id = randomUUID();
+  db.insert(users)
+    .values({
+      id,
+      username: input.username,
+      passwordHash: hashPassword(input.password),
+      createdAt: Date.now(),
+    })
+    .run();
+  return { id };
 }
 
 export function hashPassword(password: string): string {

@@ -51,3 +51,8 @@ export const credentialsSchema = z.object({
   password: z.string().min(6).max(200),
 });
 export type Credentials = z.infer<typeof credentialsSchema>;
+
+export const setupSchema = credentialsSchema.extend({
+  setupToken: z.string().min(1).max(200).optional(),
+});
+export type SetupInput = z.infer<typeof setupSchema>;

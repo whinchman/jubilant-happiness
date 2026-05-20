@@ -1,7 +1,6 @@
 import { and, eq } from "drizzle-orm";
-import { ACCOUNT_ID } from "../auth";
 import { db } from "../db/client";
-import { appMeta, tasks } from "../db/schema";
+import { appMeta, tasks, type TaskRow } from "../db/schema";
 import { endPosition } from "../lib/position";
 
 const LAST_RESET_KEY = "last_weekly_reset_at";
@@ -16,8 +15,8 @@ function mostRecentSundayStart(now: number): number {
 
 /**
  * Moves completed repeating tasks back to the Ready lane once per week (Sunday).
- * Lazy and idempotent — safe to call on every request; only does work when due,
- * so it survives homelab restarts and self-heals after downtime.
+ * Runs for every user at once when due. Lazy and idempotent — safe to call on every request;
+ * only does work when the most recent Sunday is past the stored marker.
  */
 export function runWeeklyResetIfDue(now: number = Date.now()): void {
   const meta = db
@@ -32,22 +31,26 @@ export function runWeeklyResetIfDue(now: number = Date.now()): void {
   const repeatingDone = db
     .select()
     .from(tasks)
-    .where(
-      and(
-        eq(tasks.userId, ACCOUNT_ID),
-        eq(tasks.isRepeating, true),
-        eq(tasks.lane, "done"),
-      ),
-    )
+    .where(and(eq(tasks.isRepeating, true), eq(tasks.lane, "done")))
     .all();
 
-  let position = endPosition(ACCOUNT_ID, "ready");
+  // Group by user so each user's reset rows land at the end of *their own* Ready lane.
+  const byUser = new Map<string, TaskRow[]>();
   for (const task of repeatingDone) {
-    db.update(tasks)
-      .set({ lane: "ready", position, completedAt: null })
-      .where(eq(tasks.id, task.id))
-      .run();
-    position += 1;
+    const list = byUser.get(task.userId);
+    if (list) list.push(task);
+    else byUser.set(task.userId, [task]);
+  }
+
+  for (const [userId, userTasks] of byUser) {
+    let position = endPosition(userId, "ready");
+    for (const task of userTasks) {
+      db.update(tasks)
+        .set({ lane: "ready", position, completedAt: null })
+        .where(eq(tasks.id, task.id))
+        .run();
+      position += 1;
+    }
   }
 
   db.insert(appMeta)

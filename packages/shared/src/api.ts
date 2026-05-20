@@ -10,6 +10,7 @@ import type {
   CreateTaskInput,
   Credentials,
   MoveTaskInput,
+  SetupInput,
   UpdateTaskInput,
 } from "./schemas";
 
@@ -104,7 +105,7 @@ export function fetchAuthStatus(): Promise<AuthStatus> {
   return request<AuthStatus>("/auth/status");
 }
 
-export function setupAccount(input: Credentials): Promise<void> {
+export function setupAccount(input: SetupInput): Promise<void> {
   return request<void>("/auth/setup", {
     method: "POST",
     body: JSON.stringify(input),
