@@ -139,7 +139,9 @@ export function AddScreen() {
             {clarification && <Alert severity="info">{clarification}</Alert>}
             {aiUnavailable && (
               <Alert severity="warning">
-                Couldn't reach the AI right now — add it as a single task below.
+                {breakdown.error instanceof ApiError && breakdown.error.status === 429
+                  ? "Hit the breakdown rate limit — try again later, or add it as a single task below."
+                  : "Couldn't reach the AI right now — add it as a single task below."}
               </Alert>
             )}
 

@@ -1,28 +1,83 @@
 import { useState } from "react";
 import { Alert, Box, Button, TextField, Typography } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
-import { APP_NAME } from "@todoer/shared";
+import { ApiError, APP_NAME } from "@todoer/shared";
 import { useLogin, useSetup } from "../lib/api-hooks";
 
-export function AuthScreen({ mode }: { mode: "setup" | "login" }) {
+interface AuthScreenProps {
+  defaultMode: "setup" | "login";
+  requiresSetupToken?: boolean;
+}
+
+export function AuthScreen({
+  defaultMode,
+  requiresSetupToken = false,
+}: AuthScreenProps) {
   const qc = useQueryClient();
   const setup = useSetup();
   const login = useLogin();
+  const [mode, setMode] = useState<"setup" | "login">(defaultMode);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [setupToken, setSetupToken] = useState("");
 
   const isSetup = mode === "setup";
   const mutation = isSetup ? setup : login;
+  const tokenOk = !isSetup || !requiresSetupToken || setupToken.length > 0;
   const canSubmit =
-    username.trim().length > 0 && password.length >= 6 && !mutation.isPending;
+    username.trim().length > 0 &&
+    password.length >= 6 &&
+    tokenOk &&
+    !mutation.isPending;
+
+  function toggleMode() {
+    setup.reset();
+    login.reset();
+    setMode(isSetup ? "login" : "setup");
+  }
 
   function submit() {
     if (!canSubmit) return;
-    mutation.mutate(
-      { username: username.trim(), password },
-      { onSuccess: () => void qc.invalidateQueries({ queryKey: ["authStatus"] }) },
-    );
+    const invalidate = () =>
+      void qc.invalidateQueries({ queryKey: ["authStatus"] });
+    if (isSetup) {
+      setup.mutate(
+        {
+          username: username.trim(),
+          password,
+          setupToken: setupToken.length > 0 ? setupToken : undefined,
+        },
+        { onSuccess: invalidate },
+      );
+    } else {
+      login.mutate(
+        { username: username.trim(), password },
+        { onSuccess: invalidate },
+      );
+    }
   }
+
+  const errorMessage = (() => {
+    if (!mutation.isError) return null;
+    const err = mutation.error;
+    if (err instanceof ApiError) {
+      if (err.status === 429) {
+        return "Too many attempts — try again in a few minutes.";
+      }
+      if (err.status === 401 && isSetup) {
+        return "That invite token isn't right.";
+      }
+      if (err.status === 401) {
+        return "Wrong username or password.";
+      }
+      if (err.status === 409) {
+        return "That username is taken — try a different one.";
+      }
+    }
+    return isSetup
+      ? "Couldn't create the account. Try again."
+      : "Something went wrong. Try again.";
+  })();
 
   return (
     <Box
@@ -43,7 +98,7 @@ export function AuthScreen({ mode }: { mode: "setup" | "login" }) {
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 1 }}>
         {isSetup
-          ? "Create your account to get started."
+          ? "Create an account to get started."
           : "Welcome back — log in to continue."}
       </Typography>
       <TextField
@@ -64,13 +119,19 @@ export function AuthScreen({ mode }: { mode: "setup" | "login" }) {
         helperText={isSetup ? "At least 6 characters" : " "}
         fullWidth
       />
-      {mutation.isError && (
-        <Alert severity="error">
-          {isSetup
-            ? "Couldn't create the account. Try again."
-            : "Wrong username or password."}
-        </Alert>
+      {isSetup && requiresSetupToken && (
+        <TextField
+          label="Invite token"
+          value={setupToken}
+          onChange={(e) => setSetupToken(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submit();
+          }}
+          helperText="Required to sign up on this deployment"
+          fullWidth
+        />
       )}
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
       <Button
         variant="contained"
         size="large"
@@ -79,6 +140,9 @@ export function AuthScreen({ mode }: { mode: "setup" | "login" }) {
         sx={{ py: 1.5 }}
       >
         {isSetup ? "Create account" : "Log in"}
+      </Button>
+      <Button onClick={toggleMode} sx={{ color: "text.secondary" }}>
+        {isSetup ? "Have an account? Log in" : "Have an invite? Sign up"}
       </Button>
     </Box>
   );

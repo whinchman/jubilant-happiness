@@ -1,7 +1,8 @@
 # TODO-ER
 
-A self-hosted, single-user task app built to fight the **activation-energy problem** of getting
-started — designed for (and by) someone with ADHD.
+A self-hosted, invite-only multi-user task app built to fight the **activation-energy problem**
+of getting started — designed for (and by) someone with ADHD. Each user has their own private
+board; signups are gated by a shared invite token.
 
 The core idea: never show the whole scary pile. You type in a big task, Claude breaks it into
 tiny ≤10-minute steps, and a focus mode walks you through them **one at a time**.
@@ -19,6 +20,7 @@ tiny ≤10-minute steps, and a focus mode walks you through them **one at a time
 - **Areas** — tasks are grouped (Kitchen, Yard…) so a focus session stays coherent
 - **TV dashboard** — a separate, read-only big-screen board that auto-refreshes
 - **Installable PWA**, **username/password auth**
+- **Invite-only multi-user** — each user has their own private board; signups gated by a shared `SETUP_TOKEN`
 
 ## Stack
 
@@ -94,6 +96,7 @@ Read from `.env` (repo root). See [`.env.example`](./.env.example).
 | `ANTHROPIC_API_KEY`  | yes      | Powers the AI breakdown |
 | `ANTHROPIC_MODEL`    | no       | Default `claude-sonnet-4-6` |
 | `SESSION_SECRET`     | deploy   | Session cookie encryption — set a long random string |
+| `SETUP_TOKEN`        | no       | Shared invite token for `/auth/setup` — when set, every new signup must include it. Share with the friends you want to invite |
 | `NODE_ENV`           | deploy   | Set to `production` so the server serves the phone PWA + secure cookies |
 | `DATABASE_PATH`      | no       | SQLite file location (default `data/todoer.sqlite`) |
 | `PORT` / `HOST`      | no       | Server bind address |
@@ -143,6 +146,16 @@ Screen". (Check `tailscale serve --help` — flags vary by version.)
 
 `pnpm test` runs Vitest: the server suite covers the focus-session **selection algorithm** and
 staleness scoring; the phone suite covers the drag-and-drop **fractional-position math**.
+
+## Security notes
+
+- **Invite-only signups** — set `SETUP_TOKEN` to a random string and share it with the friends
+  you want to invite; each new signup must include the token. Without `SETUP_TOKEN`, anyone who
+  finds the URL can sign up. Each user only sees their own tasks.
+- **Rate limits**: `/api/auth/login` is capped at 5 attempts per 15 minutes per IP, and
+  `/api/breakdown` at 30 requests per hour — throttles brute-force and Anthropic-bill padding.
+- Session cookies are HttpOnly + SameSite=Lax, and flip to Secure automatically when
+  `NODE_ENV=production`.
 
 ## Data
 
