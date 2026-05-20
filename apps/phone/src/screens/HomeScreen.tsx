@@ -42,6 +42,14 @@ export function HomeScreen() {
         Board
       </Button>
       <Button
+        variant="outlined"
+        size="large"
+        onClick={() => navigate("/faq")}
+        sx={{ py: 1.4, width: "100%", maxWidth: 340 }}
+      >
+        How it works
+      </Button>
+      <Button
         onClick={() => logout.mutate()}
         disabled={logout.isPending}
         sx={{ color: "text.secondary", mt: 3 }}
