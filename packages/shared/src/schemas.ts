@@ -56,13 +56,14 @@ export type BreakdownRequest = z.infer<typeof breakdownRequestSchema>;
 export const breakdownStepSchema = z.object({
   title: z.string().trim().min(1).max(200),
   estimateMinutes: z.number().int().min(1).max(240),
-  isRepeating: z.boolean().optional(),
 });
 
 export const acceptBreakdownSchema = z.object({
   projectTitle: z.string().trim().min(1).max(200),
   area: z.string().trim().min(1).max(60),
   steps: z.array(breakdownStepSchema).min(1).max(50),
+  /** Whether the resulting chore (not individual steps) repeats weekly. */
+  isRepeating: z.boolean().optional(),
 });
 export type AcceptBreakdownInput = z.infer<typeof acceptBreakdownSchema>;
 

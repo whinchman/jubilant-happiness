@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../db/client";
 import { appMeta, tasks, type TaskRow } from "../db/schema";
 import { endPosition } from "../lib/position";
@@ -28,26 +28,40 @@ export function runWeeklyResetIfDue(now: number = Date.now()): void {
 
   if (lastReset >= mostRecentSundayStart(now)) return;
 
+  // Only chores can be repeating (steps inherit their parent's reset). The
+  // parent_id IS NULL clause is belt-and-suspenders against legacy step rows
+  // that may still carry is_repeating=true from before the chore/step model.
   const repeatingDone = db
     .select()
     .from(tasks)
-    .where(and(eq(tasks.isRepeating, true), eq(tasks.lane, "done")))
+    .where(
+      and(
+        eq(tasks.isRepeating, true),
+        eq(tasks.lane, "done"),
+        isNull(tasks.parentId),
+      ),
+    )
     .all();
 
   // Group by user so each user's reset rows land at the end of *their own* Ready lane.
   const byUser = new Map<string, TaskRow[]>();
-  for (const task of repeatingDone) {
-    const list = byUser.get(task.userId);
-    if (list) list.push(task);
-    else byUser.set(task.userId, [task]);
+  for (const chore of repeatingDone) {
+    const list = byUser.get(chore.userId);
+    if (list) list.push(chore);
+    else byUser.set(chore.userId, [chore]);
   }
 
-  for (const [userId, userTasks] of byUser) {
+  for (const [userId, userChores] of byUser) {
     let position = endPosition(userId, "ready");
-    for (const task of userTasks) {
+    for (const chore of userChores) {
       db.update(tasks)
         .set({ lane: "ready", position, completedAt: null })
-        .where(eq(tasks.id, task.id))
+        .where(eq(tasks.id, chore.id))
+        .run();
+      // Reset all steps to pending so the chore starts fresh on the next run.
+      db.update(tasks)
+        .set({ completedAt: null })
+        .where(eq(tasks.parentId, chore.id))
         .run();
       position += 1;
     }

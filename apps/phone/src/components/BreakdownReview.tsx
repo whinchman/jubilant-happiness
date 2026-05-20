@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import RepeatIcon from "@mui/icons-material/Repeat";
 import {
   Alert,
   Autocomplete,
@@ -12,7 +11,6 @@ import {
   Stack,
   Switch,
   TextField,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import type { AcceptBreakdownInput, BreakdownPreview } from "@todoer/shared";
@@ -21,7 +19,6 @@ interface EditableStep {
   key: string;
   title: string;
   estimate: string;
-  isRepeating: boolean;
 }
 
 interface BreakdownReviewProps {
@@ -46,12 +43,12 @@ export function BreakdownReview({
 
   const [projectTitle, setProjectTitle] = useState(preview.projectTitle);
   const [area, setArea] = useState(preview.area);
+  const [isRepeating, setIsRepeating] = useState(false);
   const [steps, setSteps] = useState<EditableStep[]>(() =>
     preview.steps.map((s) => ({
       key: nextKey(),
       title: s.title,
       estimate: String(s.estimateMinutes),
-      isRepeating: false,
     })),
   );
 
@@ -64,21 +61,14 @@ export function BreakdownReview({
   function addStep() {
     setSteps((prev) => [
       ...prev,
-      { key: nextKey(), title: "", estimate: "5", isRepeating: false },
+      { key: nextKey(), title: "", estimate: "5" },
     ]);
-  }
-
-  const allRepeating = steps.length > 0 && steps.every((s) => s.isRepeating);
-  function toggleAllRepeating() {
-    const next = !allRepeating;
-    setSteps((prev) => prev.map((s) => ({ ...s, isRepeating: next })));
   }
 
   const validSteps = steps
     .map((s) => ({
       title: s.title.trim(),
       estimateMinutes: Number(s.estimate),
-      isRepeating: s.isRepeating,
     }))
     .filter(
       (s) =>
@@ -96,7 +86,7 @@ export function BreakdownReview({
         Here's the plan — tweak anything, then add it.
       </Typography>
       <TextField
-        label="Task"
+        label="Chore"
         value={projectTitle}
         onChange={(e) => setProjectTitle(e.target.value)}
         fullWidth
@@ -110,32 +100,19 @@ export function BreakdownReview({
         onInputChange={(_, value) => setArea(value)}
         renderInput={(params) => <TextField {...params} label="Area" />}
       />
-      <Stack
-        direction="row"
-        sx={{ justifyContent: "space-between", alignItems: "center" }}
-      >
-        <Typography variant="subtitle2" color="text.secondary">
-          Steps ({validSteps.length})
-        </Typography>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={allRepeating}
-              onChange={toggleAllRepeating}
-              size="small"
-            />
-          }
-          label="Repeat all weekly"
-          labelPlacement="start"
-          sx={{
-            ml: 0,
-            "& .MuiFormControlLabel-label": {
-              fontSize: 14,
-              color: "text.secondary",
-            },
-          }}
-        />
-      </Stack>
+      <FormControlLabel
+        control={
+          <Switch
+            checked={isRepeating}
+            onChange={(e) => setIsRepeating(e.target.checked)}
+            size="small"
+          />
+        }
+        label="This chore repeats weekly"
+      />
+      <Typography variant="subtitle2" color="text.secondary">
+        Steps ({validSteps.length})
+      </Typography>
       <Stack spacing={1}>
         {steps.map((step, index) => (
           <Stack
@@ -173,23 +150,6 @@ export function BreakdownReview({
                 },
               }}
             />
-            <Tooltip
-              title={step.isRepeating ? "Repeats weekly" : "Tap if this repeats weekly"}
-            >
-              <IconButton
-                onClick={() =>
-                  updateStep(step.key, { isRepeating: !step.isRepeating })
-                }
-                aria-label="Repeats weekly"
-                size="small"
-                sx={{
-                  mt: 0.5,
-                  color: step.isRepeating ? "primary.main" : "text.disabled",
-                }}
-              >
-                <RepeatIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
             <IconButton
               onClick={() => removeStep(step.key)}
               aria-label="Remove step"
@@ -204,7 +164,9 @@ export function BreakdownReview({
       <Button startIcon={<AddIcon />} onClick={addStep} sx={{ alignSelf: "flex-start" }}>
         Add a step
       </Button>
-      {error && <Alert severity="error">Couldn't add these tasks. Try again.</Alert>}
+      {error && (
+        <Alert severity="error">Couldn't add this chore. Try again.</Alert>
+      )}
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
         <Button onClick={onStartOver} disabled={accepting}>
           Start over
@@ -218,10 +180,12 @@ export function BreakdownReview({
               projectTitle: projectTitle.trim(),
               area: area.trim() || "General",
               steps: validSteps,
+              isRepeating,
             })
           }
         >
-          Add {validSteps.length} {validSteps.length === 1 ? "task" : "tasks"} to Ready
+          Add chore with {validSteps.length}{" "}
+          {validSteps.length === 1 ? "step" : "steps"}
         </Button>
       </Stack>
     </Box>

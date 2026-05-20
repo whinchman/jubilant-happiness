@@ -98,9 +98,10 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
 
     const enteringDone = lane === "done" && existing.lane !== "done";
     const leavingDone = lane !== "done" && existing.lane === "done";
+    const enteringReady = lane === "ready" && existing.lane !== "ready";
     const now = Date.now();
 
-    return db
+    const row = db
       .update(tasks)
       .set({
         lane,
@@ -112,5 +113,17 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
       .where(eq(tasks.id, req.params.id))
       .returning()
       .get();
+
+    // Dragging a chore into To Do is "start me over" — reset every step's
+    // completion so the chore re-runs from the top. Same semantics as the
+    // weekly Sunday reset, just triggered by the user.
+    if (enteringReady) {
+      db.update(tasks)
+        .set({ completedAt: null })
+        .where(eq(tasks.parentId, req.params.id))
+        .run();
+    }
+
+    return row;
   });
 };

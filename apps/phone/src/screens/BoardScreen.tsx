@@ -22,12 +22,7 @@ import {
 } from "@dnd-kit/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import {
-  LANES,
-  type Board,
-  type ChoreWithSteps,
-  type Lane as LaneId,
-} from "@todoer/shared";
+import { LANES, type Board, type Lane as LaneId } from "@todoer/shared";
 import { EditTaskDialog } from "../components/EditTaskDialog";
 import { Lane } from "../components/Lane";
 import { TaskCard } from "../components/TaskCard";
@@ -35,7 +30,7 @@ import { useBoard, useMoveTask } from "../lib/api-hooks";
 import { computeMove, findChoreInBoard, findLane, isLane } from "../lib/board-dnd";
 
 const LANE_LABELS: Record<LaneId, string> = {
-  ready: "Ready",
+  ready: "To Do",
   doing: "Doing",
   done: "Done",
 };
@@ -45,7 +40,7 @@ export function BoardScreen() {
   const moveTask = useMoveTask();
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [editingChore, setEditingChore] = useState<ChoreWithSteps | null>(null);
+  const [editingChoreId, setEditingChoreId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -148,7 +143,7 @@ export function BoardScreen() {
                   laneId={lane}
                   title={LANE_LABELS[lane]}
                   chores={boardData[lane]}
-                  onChoreClick={setEditingChore}
+                  onChoreClick={(c) => setEditingChoreId(c.id)}
                 />
               ))}
             </Box>
@@ -163,7 +158,10 @@ export function BoardScreen() {
         )}
       </Box>
 
-      <EditTaskDialog task={editingChore} onClose={() => setEditingChore(null)} />
+      <EditTaskDialog
+        choreId={editingChoreId}
+        onClose={() => setEditingChoreId(null)}
+      />
     </Box>
   );
 }

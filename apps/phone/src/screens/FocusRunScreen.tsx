@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useState, type ReactNode } from "react";
 import { Box, Button, CircularProgress, Stack, Typography } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
-import type { Task } from "@todoer/shared";
+import type { FocusItem } from "@todoer/shared";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import {
   ActiveTaskView,
@@ -9,13 +9,17 @@ import {
   BreakView,
   FinishView,
 } from "../components/focus-views";
-import { useGetStartedSession, useMoveTask } from "../lib/api-hooks";
+import {
+  useGetStartedSession,
+  useMoveTask,
+  useUpdateStep,
+} from "../lib/api-hooks";
 
 type Phase = "loading" | "empty" | "task" | "break" | "areaComplete" | "finish";
 
 interface RunState {
   phase: Phase;
-  session: Task[];
+  session: FocusItem[];
   index: number;
   startedAt: number;
   segmentStartedAt: number;
@@ -28,11 +32,11 @@ interface RunState {
 }
 
 type RunAction =
-  | { type: "loaded"; session: Task[]; now: number }
+  | { type: "loaded"; session: FocusItem[]; now: number }
   | { type: "complete"; now: number; workMs: number }
   | { type: "endBreak"; now: number }
   | { type: "endRun"; now: number; cancelled: boolean }
-  | { type: "continueSession"; session: Task[]; now: number };
+  | { type: "continueSession"; session: FocusItem[]; now: number };
 
 const INITIAL: RunState = {
   phase: "loading",
@@ -122,6 +126,7 @@ export function FocusRunScreen() {
 
   const session = useGetStartedSession();
   const moveTask = useMoveTask();
+  const updateStep = useUpdateStep();
   const [state, dispatch] = useReducer(reducer, INITIAL);
   const [now, setNow] = useState(() => Date.now());
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -146,8 +151,20 @@ export function FocusRunScreen() {
   }, [now, state.phase, state.segmentStartedAt, breakMs]);
 
   function completeCurrent() {
-    const task = state.session[state.index];
-    if (task) moveTask.mutate({ id: task.id, input: { lane: "done" } });
+    const item = state.session[state.index];
+    if (item) {
+      if (item.kind === "step") {
+        // Checking the step also calls reconcileChoreLane server-side; if it's
+        // the chore's last step, the chore auto-promotes Doing → Done.
+        updateStep.mutate({
+          choreId: item.chore.id,
+          stepId: item.step.id,
+          input: { completed: true },
+        });
+      } else {
+        moveTask.mutate({ id: item.chore.id, input: { lane: "done" } });
+      }
+    }
     dispatch({ type: "complete", now: Date.now(), workMs });
   }
 
@@ -193,7 +210,7 @@ export function FocusRunScreen() {
         <Stack spacing={2} sx={{ alignItems: "center", textAlign: "center", px: 4 }}>
           <Typography variant="h6">Nothing's ready yet</Typography>
           <Typography color="text.secondary">
-            Move a few tasks into the Ready lane, then start a session.
+            Move a few chores into the To Do lane, then start a session.
           </Typography>
           <Button variant="contained" onClick={() => navigate("/board")}>
             Go to the board
@@ -210,7 +227,7 @@ export function FocusRunScreen() {
     <>
       {state.phase === "task" && current && (
         <ActiveTaskView
-          task={current}
+          item={current}
           elapsedMs={now - state.segmentStartedAt}
           onComplete={completeCurrent}
           onAbandon={() => setConfirmOpen(true)}

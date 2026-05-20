@@ -8,7 +8,7 @@ import {
 } from "@todoer/shared";
 
 const LABELS: Record<Lane, string> = {
-  ready: "Ready",
+  ready: "To Do",
   doing: "Doing",
   done: "Done",
 };
@@ -62,27 +62,38 @@ function DashColumn({
         {title} · {chores.length}
       </Typography>
       <Stack spacing={1.5} sx={{ overflowY: "auto", flexGrow: 1 }}>
-        {chores.map((chore) => (
-          <Box
-            key={chore.id}
-            sx={{ bgcolor: "rgba(255,255,255,0.05)", borderRadius: 2, p: 1.5 }}
-          >
-            <Typography sx={{ fontWeight: 600, fontSize: 18, mb: 0.75 }}>
-              {chore.title}
-            </Typography>
-            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-              <Chip label={`${chore.estimateMinutes} min`} size="small" />
-              {chore.area && (
-                <Chip
-                  label={chore.area}
-                  size="small"
-                  color="primary"
-                  variant="outlined"
-                />
-              )}
+        {chores.map((chore) => {
+          const stepTotal = chore.steps.length;
+          const stepDone = chore.steps.filter((s) => s.completedAt !== null).length;
+          return (
+            <Box
+              key={chore.id}
+              sx={{ bgcolor: "rgba(255,255,255,0.05)", borderRadius: 2, p: 1.5 }}
+            >
+              <Typography sx={{ fontWeight: 600, fontSize: 18, mb: 0.75 }}>
+                {chore.title}
+              </Typography>
+              <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                <Chip label={`${chore.estimateMinutes} min`} size="small" />
+                {chore.area && (
+                  <Chip
+                    label={chore.area}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                )}
+                {stepTotal > 0 && (
+                  <Chip
+                    label={`${stepDone}/${stepTotal}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+              </Box>
             </Box>
-          </Box>
-        ))}
+          );
+        })}
         {chores.length === 0 && (
           <Typography sx={{ color: "text.disabled" }}>—</Typography>
         )}

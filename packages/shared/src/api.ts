@@ -2,6 +2,7 @@ import type {
   AuthStatus,
   Board,
   BreakdownPreview,
+  FocusItem,
   Project,
   Task,
 } from "./types";
@@ -126,15 +127,15 @@ export function requestBreakdown(text: string): Promise<BreakdownPreview> {
   });
 }
 
-export function acceptBreakdown(input: AcceptBreakdownInput): Promise<Task[]> {
-  return request<Task[]>("/breakdown/accept", {
+export function acceptBreakdown(input: AcceptBreakdownInput): Promise<Task> {
+  return request<Task>("/breakdown/accept", {
     method: "POST",
     body: JSON.stringify(input),
   });
 }
 
-export function fetchGetStartedSession(): Promise<Task[]> {
-  return request<Task[]>("/focus/get-started");
+export function fetchGetStartedSession(): Promise<FocusItem[]> {
+  return request<FocusItem[]>("/focus/get-started");
 }
 
 export function fetchAuthStatus(): Promise<AuthStatus> {
