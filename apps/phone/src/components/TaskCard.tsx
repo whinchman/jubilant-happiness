@@ -2,6 +2,7 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import RepeatIcon from "@mui/icons-material/Repeat";
 import { Box, Card, CardContent, Stack, Typography } from "@mui/material";
+import { useNavigate } from "react-router";
 import type { ChoreWithSteps, Lane, Task } from "@todoer/shared";
 import {
   bg,
@@ -17,6 +18,7 @@ import {
   yellow,
 } from "../theme";
 import { useUpdateStep } from "../lib/api-hooks";
+import { expandChoreToFocusItems, hasFocusableWork } from "../lib/focus-items";
 
 interface TaskCardProps {
   chore: ChoreWithSteps;
@@ -34,11 +36,18 @@ function stableTilt(id: string): number {
 }
 
 export function TaskCard({ chore, onClick, flat = false, lane }: TaskCardProps) {
+  const navigate = useNavigate();
   const steps = chore.steps;
   const currentStep = steps.find((s) => s.completedAt === null) ?? null;
   const estimateLabel = formatEstimate(chore);
   const tilt = flat ? 0 : stableTilt(chore.id);
   const isDone = lane === "done";
+  const showStart = !flat && !isDone && hasFocusableWork(chore);
+
+  function handleStart(e: React.MouseEvent) {
+    e.stopPropagation();
+    navigate("/focus", { state: { session: expandChoreToFocusItems(chore) } });
+  }
 
   return (
     <Card
@@ -60,6 +69,48 @@ export function TaskCard({ chore, onClick, flat = false, lane }: TaskCardProps) 
         },
       }}
     >
+      {showStart && (
+        <Box
+          component="button"
+          onClick={handleStart}
+          aria-label={`Start focus on "${chore.title}"`}
+          sx={{
+            all: "unset",
+            cursor: "pointer",
+            position: "absolute",
+            top: 8,
+            right: 8,
+            zIndex: 1,
+            bgcolor: pink,
+            color: ink,
+            border: `2px solid ${ink}`,
+            px: 0.85,
+            py: 0.3,
+            fontFamily: mono,
+            fontWeight: 600,
+            fontSize: 11,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            boxShadow: `2px 2px 0 0 ${ink}`,
+            transform: "rotate(3deg)",
+            transition: "transform 100ms ease, box-shadow 100ms ease",
+            "&:hover": {
+              transform: "rotate(3deg) translate(-1px, -1px)",
+              boxShadow: `3px 3px 0 0 ${ink}`,
+            },
+            "&:active": {
+              transform: "rotate(3deg) translate(1px, 1px)",
+              boxShadow: `1px 1px 0 0 ${ink}`,
+            },
+            "&:focus-visible": {
+              outline: `2px solid ${blue}`,
+              outlineOffset: 2,
+            },
+          }}
+        >
+          ▶ start
+        </Box>
+      )}
       <CardContent sx={{ py: 1.5, px: 1.75, "&:last-child": { pb: 1.5 } }}>
         <Typography
           sx={{
@@ -72,6 +123,7 @@ export function TaskCard({ chore, onClick, flat = false, lane }: TaskCardProps) 
             color: ink,
             textDecoration: isDone ? "line-through" : "none",
             mb: 1,
+            pr: showStart ? 7 : 0,
           }}
         >
           {chore.title}

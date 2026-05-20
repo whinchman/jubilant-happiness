@@ -149,10 +149,11 @@ export function useAcceptBreakdown() {
   });
 }
 
-export function useGetStartedSession() {
+export function useGetStartedSession(enabled: boolean = true) {
   return useQuery({
     queryKey: ["focusSession"],
     queryFn: fetchGetStartedSession,
+    enabled,
     gcTime: 0,
     staleTime: Infinity,
   });

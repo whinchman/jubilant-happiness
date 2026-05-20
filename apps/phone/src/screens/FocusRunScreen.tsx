@@ -121,12 +121,21 @@ export function FocusRunScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const settings = location.state as
-    | { workMinutes?: number; breakMinutes?: number }
+    | {
+        workMinutes?: number;
+        breakMinutes?: number;
+        /** When set (e.g. via the board's per-card START button), skips the
+         * /focus/get-started fetch and runs just this preloaded session. */
+        session?: FocusItem[];
+      }
     | null;
   const workMs = (settings?.workMinutes ?? 20) * 60_000;
   const breakMs = (settings?.breakMinutes ?? 5) * 60_000;
+  const [initialSession] = useState<FocusItem[] | null>(
+    () => settings?.session ?? null,
+  );
 
-  const session = useGetStartedSession();
+  const session = useGetStartedSession(initialSession === null);
   const moveTask = useMoveTask();
   const updateStep = useUpdateStep();
   const [state, dispatch] = useReducer(reducer, INITIAL);
@@ -135,10 +144,13 @@ export function FocusRunScreen() {
   const [continuing, setContinuing] = useState(false);
 
   useEffect(() => {
-    if (state.phase === "loading" && session.data) {
+    if (state.phase !== "loading") return;
+    if (initialSession) {
+      dispatch({ type: "loaded", session: initialSession, now: Date.now() });
+    } else if (session.data) {
       dispatch({ type: "loaded", session: session.data, now: Date.now() });
     }
-  }, [state.phase, session.data]);
+  }, [state.phase, session.data, initialSession]);
 
   useEffect(() => {
     if (state.phase !== "task" && state.phase !== "break") return;
