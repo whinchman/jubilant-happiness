@@ -23,13 +23,15 @@ interface RunState {
   completed: number;
   breakMs: number;
   finishedAt: number;
+  /** True if the run ended via mid-cycle Abandon; false on natural Finish. */
+  cancelled: boolean;
 }
 
 type RunAction =
   | { type: "loaded"; session: Task[]; now: number }
   | { type: "complete"; now: number; workMs: number }
   | { type: "endBreak"; now: number }
-  | { type: "abandon"; now: number }
+  | { type: "endRun"; now: number; cancelled: boolean }
   | { type: "continueSession"; session: Task[]; now: number };
 
 const INITIAL: RunState = {
@@ -42,6 +44,7 @@ const INITIAL: RunState = {
   completed: 0,
   breakMs: 0,
   finishedAt: 0,
+  cancelled: false,
 };
 
 function reducer(state: RunState, action: RunAction): RunState {
@@ -81,12 +84,22 @@ function reducer(state: RunState, action: RunAction): RunState {
         segmentStartedAt: action.now,
         sinceBreakAt: action.now,
       };
-    case "abandon":
-      return { ...state, phase: "finish", finishedAt: action.now };
+    case "endRun":
+      return {
+        ...state,
+        phase: "finish",
+        finishedAt: action.now,
+        cancelled: action.cancelled,
+      };
     case "continueSession":
       // Carry stats forward; just swap in the new session and restart the task loop.
       if (action.session.length === 0) {
-        return { ...state, phase: "finish", finishedAt: action.now };
+        return {
+          ...state,
+          phase: "finish",
+          finishedAt: action.now,
+          cancelled: false,
+        };
       }
       return {
         ...state,
@@ -154,7 +167,7 @@ export function FocusRunScreen() {
 
   function confirmAbandon() {
     setConfirmOpen(false);
-    dispatch({ type: "abandon", now: Date.now() });
+    dispatch({ type: "endRun", now: Date.now(), cancelled: true });
   }
 
   if (state.phase === "loading") {
@@ -214,7 +227,9 @@ export function FocusRunScreen() {
         <AreaCompleteView
           completed={state.completed}
           onContinue={continueWithNextArea}
-          onFinish={() => dispatch({ type: "abandon", now: Date.now() })}
+          onFinish={() =>
+            dispatch({ type: "endRun", now: Date.now(), cancelled: false })
+          }
           continuing={continuing}
         />
       )}
@@ -223,6 +238,7 @@ export function FocusRunScreen() {
           completed={state.completed}
           totalElapsedMs={state.finishedAt - state.startedAt}
           totalBreakMs={state.breakMs}
+          cancelled={state.cancelled}
           onDone={() => navigate("/")}
         />
       )}
