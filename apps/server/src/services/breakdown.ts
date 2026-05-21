@@ -19,11 +19,17 @@ If the task IS sorting or processing the doombox itself (titles like "sort the d
 
 If the input is too vague or is not an actionable task, set isActionable to false, leave steps empty, and put one specific clarifying question in "clarification".
 
+There are specialized chore generators ("chore kits") that handle some task types better than this open-ended breakdown:
+- "packing" — packing for a trip (destination, nights, who's going, etc.).
+
+If the input clearly describes a kit-supported task (e.g. "pack for paris", "what to bring for the camping trip"), set isActionable to false, put a short clarification like "this sounds like packing for a trip — try the packing kit", and set suggestedKitKind to the matching kit id (currently only "packing"). Do NOT set suggestedKitKind unless the input matches a supported kit.
+
 Always respond by calling the submit_breakdown tool.`;
 
 const toolOutputSchema = z.object({
   isActionable: z.boolean(),
   clarification: z.string().optional(),
+  suggestedKitKind: z.string().optional(),
   projectTitle: z.string(),
   area: z.string(),
   steps: z.array(
@@ -36,7 +42,7 @@ const toolOutputSchema = z.object({
 
 export type BreakdownOutcome =
   | { actionable: true; projectTitle: string; area: string; steps: BreakdownStep[] }
-  | { actionable: false; clarification: string };
+  | { actionable: false; clarification: string; suggestedKitKind?: string };
 
 /**
  * Asks Claude to break a task into <=10-minute steps via a forced tool call.
@@ -68,6 +74,11 @@ export async function breakdownTask(text: string): Promise<BreakdownOutcome> {
             clarification: {
               type: "string",
               description: "When isActionable is false, one specific clarifying question.",
+            },
+            suggestedKitKind: {
+              type: "string",
+              description:
+                "When isActionable is false and the input matches a chore kit, the kit id (e.g. 'packing').",
             },
             projectTitle: {
               type: "string",
@@ -114,6 +125,7 @@ export async function breakdownTask(text: string): Promise<BreakdownOutcome> {
       clarification:
         data.clarification?.trim() ||
         "Could you describe the task in a little more detail?",
+      suggestedKitKind: data.suggestedKitKind?.trim() || undefined,
     };
   }
 
