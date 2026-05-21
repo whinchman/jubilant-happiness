@@ -47,9 +47,93 @@ export function buildPackingArea(form: PackingFormInput): string {
   return `${form.destination} - Trip`;
 }
 
-// Filled in Task 6:
+const toolOutputSchema = z.object({
+  projectTitle: z.string(),
+  area: z.string(),
+  steps: z
+    .array(
+      z.object({
+        title: z.string(),
+        estimateMinutes: z.number(),
+        notes: z.string(),
+      }),
+    )
+    .min(1)
+    .max(25),
+});
+
 export async function generatePackingList(
-  _form: PackingFormInput,
+  form: PackingFormInput,
 ): Promise<BreakdownPreview> {
-  throw new Error("generatePackingList not implemented yet");
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
+
+  const client = new Anthropic({ apiKey });
+  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
+
+  const message = await client.messages.create({
+    model,
+    max_tokens: 2000,
+    system: PACKING_SYSTEM_PROMPT,
+    tools: [
+      {
+        name: "submit_packing_list",
+        description:
+          "Submit the grouped packing list as ordered category steps with per-step item notes.",
+        input_schema: {
+          type: "object",
+          properties: {
+            projectTitle: { type: "string" },
+            area: { type: "string" },
+            steps: {
+              type: "array",
+              minItems: 5,
+              maxItems: 10,
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string" },
+                  estimateMinutes: { type: "integer", minimum: 1, maximum: 30 },
+                  notes: { type: "string" },
+                },
+                required: ["title", "estimateMinutes", "notes"],
+              },
+            },
+          },
+          required: ["projectTitle", "area", "steps"],
+        },
+      },
+    ],
+    tool_choice: { type: "tool", name: "submit_packing_list" },
+    messages: [{ role: "user", content: buildPackingUserMessage(form) }],
+  });
+
+  const toolUse = message.content.find((block) => block.type === "tool_use");
+  if (!toolUse || toolUse.type !== "tool_use") {
+    throw new Error("the model did not return a packing list");
+  }
+
+  const parsed = toolOutputSchema.safeParse(toolUse.input);
+  if (!parsed.success) throw new Error("the model returned a malformed packing list");
+
+  const steps = parsed.data.steps
+    .map((s) => ({
+      title: s.title.trim(),
+      estimateMinutes: Math.min(Math.max(Math.round(s.estimateMinutes), 1), 30),
+      notes: s.notes.trim(),
+    }))
+    .filter((s) => s.title.length > 0);
+
+  if (steps.length === 0) {
+    throw new Error("the model returned an empty packing list");
+  }
+
+  // The model's projectTitle/area may differ from our deterministic ones — we
+  // override with the deterministic versions so the auto-area grouping works
+  // and the title stays in the expected format.
+  return {
+    projectTitle: buildPackingProjectTitle(form),
+    area: buildPackingArea(form),
+    steps,
+  };
 }
