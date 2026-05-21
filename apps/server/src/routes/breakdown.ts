@@ -88,7 +88,7 @@ export const breakdownRoutes: FastifyPluginAsync = async (app) => {
             projectId: null,
             parentId: choreId,
             title: step.title,
-            notes: "",
+            notes: step.notes ?? "",
             area: null,
             estimateMinutes: step.estimateMinutes,
             lane: "ready",
