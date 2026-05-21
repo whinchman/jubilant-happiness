@@ -78,3 +78,28 @@ export const setupSchema = credentialsSchema.extend({
   setupToken: z.string().min(1).max(200).optional(),
 });
 export type SetupInput = z.infer<typeof setupSchema>;
+
+export const PACKING_TRIP_TYPES = [
+  "business",
+  "leisure",
+  "outdoors",
+  "family visit",
+  "beach",
+  "ski",
+] as const;
+export type PackingTripType = (typeof PACKING_TRIP_TYPES)[number];
+
+export const PACKING_CLIMATES = ["hot", "mild", "cold", "mixed", "rainy"] as const;
+export type PackingClimate = (typeof PACKING_CLIMATES)[number];
+
+export const packingFormSchema = z.object({
+  destination: z.string().trim().min(1).max(80),
+  nights: z.number().int().min(0).max(60),
+  tripType: z.enum(PACKING_TRIP_TYPES),
+  climate: z.enum(PACKING_CLIMATES),
+  adults: z.number().int().min(1).max(20),
+  children: z.number().int().min(0).max(20),
+  dogs: z.number().int().min(0).max(20),
+  anythingElse: z.string().max(500).optional(),
+});
+export type PackingFormInput = z.infer<typeof packingFormSchema>;
