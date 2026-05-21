@@ -13,6 +13,7 @@ import type {
   Credentials,
   MoveStepInput,
   MoveTaskInput,
+  PackingFormInput,
   SetupInput,
   UpdateStepInput,
   UpdateTaskInput,
@@ -132,6 +133,15 @@ export function requestBreakdown(text: string): Promise<BreakdownPreview> {
 
 export function acceptBreakdown(input: AcceptBreakdownInput): Promise<Task> {
   return request<Task>("/breakdown/accept", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function generatePackingKit(
+  input: PackingFormInput,
+): Promise<BreakdownPreview> {
+  return request<BreakdownPreview>("/kits/packing/generate", {
     method: "POST",
     body: JSON.stringify(input),
   });
