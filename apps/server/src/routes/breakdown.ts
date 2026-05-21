@@ -27,9 +27,11 @@ export const breakdownRoutes: FastifyPluginAsync = async (app) => {
       }
 
       if (!outcome.actionable) {
-        return reply
-          .code(422)
-          .send({ error: "needs_clarification", clarification: outcome.clarification });
+        return reply.code(422).send({
+          error: "needs_clarification",
+          clarification: outcome.clarification,
+          suggestedKitKind: outcome.suggestedKitKind,
+        });
       }
       return {
         projectTitle: outcome.projectTitle,
