@@ -59,6 +59,8 @@ export type FocusItem =
 export interface BreakdownStep {
   title: string;
   estimateMinutes: number;
+  /** Optional free-text notes (e.g. packing-kit items: "passport, wallet, tickets"). */
+  notes?: string;
 }
 
 /** The AI breakdown preview the user reviews before accepting. */
