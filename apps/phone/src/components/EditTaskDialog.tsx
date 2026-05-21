@@ -461,7 +461,7 @@ function StepRow({ step, choreId, index, autoFocus, onAutoFocused }: StepRowProp
 
   function commitNotes() {
     const trimmed = notesText.trim();
-    if (trimmed === (step.notes ?? "")) return;
+    if (trimmed === step.notes) return;
     updateStep.mutate({
       choreId,
       stepId: step.id,

@@ -280,7 +280,15 @@ export function BreakdownReview({
               />
             ) : (
               <Box
+                role="button"
+                tabIndex={0}
                 onClick={() => updateStep(step.key, { notesExpanded: true })}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    updateStep(step.key, { notesExpanded: true });
+                  }
+                }}
                 sx={{
                   mt: 0.5,
                   fontFamily: mono,

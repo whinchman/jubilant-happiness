@@ -55,11 +55,11 @@ const toolOutputSchema = z.object({
       z.object({
         title: z.string(),
         estimateMinutes: z.number(),
-        notes: z.string(),
+        notes: z.string().max(2000),
       }),
     )
-    .min(1)
-    .max(25),
+    .min(5)
+    .max(10),
 });
 
 export async function generatePackingList(
