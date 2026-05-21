@@ -216,6 +216,24 @@ export function AddScreen() {
                 </Box>
               )}
             </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => navigate("/add/kit")}
+              sx={{
+                py: 1.75,
+                fontSize: 14,
+                justifyContent: "space-between",
+              }}
+            >
+              <Box component="span">use a chore kit</Box>
+              <Box
+                component="span"
+                sx={{ fontFamily: display, fontWeight: 900, fontSize: 22, color: pink }}
+              >
+                →
+              </Box>
+            </Button>
             {clarification && <Alert severity="info">{clarification}</Alert>}
             {aiUnavailable && (
               <Alert severity="warning">
