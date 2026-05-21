@@ -22,6 +22,7 @@ import {
   useBreakdown,
   useCreateTask,
 } from "../lib/api-hooks";
+import { findKit, kitRoute } from "../kits/registry";
 import {
   bg,
   blue,
@@ -43,6 +44,7 @@ export function AddScreen() {
   const [text, setText] = useState("");
   const [preview, setPreview] = useState<BreakdownPreview | null>(null);
   const [clarification, setClarification] = useState<string | null>(null);
+  const [suggestedKitKind, setSuggestedKitKind] = useState<string | null>(null);
   const [aiUnavailable, setAiUnavailable] = useState(false);
 
   const [manualTitle, setManualTitle] = useState("");
@@ -53,13 +55,17 @@ export function AddScreen() {
     const trimmed = text.trim();
     if (trimmed.length === 0) return;
     setClarification(null);
+    setSuggestedKitKind(null);
     setAiUnavailable(false);
     breakdown.mutate(trimmed, {
       onSuccess: (result) => setPreview(result),
       onError: (err) => {
         if (err instanceof ApiError && err.status === 422) {
-          const detail = err.detail as { clarification?: string } | undefined;
+          const detail = err.detail as
+            | { clarification?: string; suggestedKitKind?: string }
+            | undefined;
           setClarification(detail?.clarification ?? "could you add a little more detail?");
+          setSuggestedKitKind(detail?.suggestedKitKind ?? null);
         } else {
           setAiUnavailable(true);
           if (manualTitle.trim().length === 0) setManualTitle(trimmed);
@@ -234,7 +240,31 @@ export function AddScreen() {
                 →
               </Box>
             </Button>
-            {clarification && <Alert severity="info">{clarification}</Alert>}
+            {clarification && (
+              <Alert severity="info" sx={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 1 }}>
+                <Box>{clarification}</Box>
+                {(() => {
+                  const kit = findKit(suggestedKitKind);
+                  if (!kit || !kit.enabled) return null;
+                  return (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() =>
+                        navigate(kitRoute(kit.id), { state: { prefillText: text.trim() } })
+                      }
+                      sx={{
+                        alignSelf: "flex-start",
+                        mt: 0.5,
+                        fontSize: 12,
+                      }}
+                    >
+                      open the {kit.title} kit →
+                    </Button>
+                  );
+                })()}
+              </Alert>
+            )}
             {aiUnavailable && (
               <Alert severity="warning">
                 {breakdown.error instanceof ApiError && breakdown.error.status === 429
