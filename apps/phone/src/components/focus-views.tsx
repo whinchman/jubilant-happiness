@@ -154,6 +154,41 @@ export function ActiveTaskView({
           </Typography>
         </Box>
 
+        {view.notes.trim().length > 0 && (
+          <Box
+            sx={{
+              border: `2px solid ${ink}`,
+              bgcolor: bgCard,
+              p: 1.5,
+              mt: 1,
+            }}
+          >
+            <Typography
+              sx={{
+                fontFamily: mono,
+                fontSize: 11,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: inkDim,
+                mb: 0.75,
+              }}
+            >
+              details
+            </Typography>
+            <Typography
+              sx={{
+                fontFamily: mono,
+                fontSize: 14,
+                lineHeight: 1.5,
+                color: ink,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {view.notes}
+            </Typography>
+          </Box>
+        )}
+
         {overtime ? <OvertimeStamp /> : <ProgressBar progress={progress} />}
       </Box>
 
@@ -303,6 +338,7 @@ interface ActiveTaskDescriptor {
   context: string | null;
   area: string | null;
   estimateMinutes: number;
+  notes: string;
 }
 
 function describe(item: FocusItem): ActiveTaskDescriptor {
@@ -313,6 +349,7 @@ function describe(item: FocusItem): ActiveTaskDescriptor {
       context: null,
       area: item.chore.area,
       estimateMinutes: item.chore.estimateMinutes,
+      notes: item.chore.notes,
     };
   }
   // No "X of N" — see [[focus-no-remaining-work]] in memory.
@@ -322,6 +359,7 @@ function describe(item: FocusItem): ActiveTaskDescriptor {
     context: item.chore.title,
     area: item.chore.area,
     estimateMinutes: item.step.estimateMinutes,
+    notes: item.step.notes,
   };
 }
 
