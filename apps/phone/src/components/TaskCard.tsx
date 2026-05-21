@@ -238,70 +238,92 @@ function StepRow({ step, choreId, isCurrent, index }: StepRowProps) {
   return (
     <Box
       sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 0.5,
-        px: 0.5,
-        py: 0.35,
         bgcolor: isCurrent ? yellow : "transparent",
         borderLeft: isCurrent ? `3px solid ${ink}` : `3px solid transparent`,
         opacity: completed ? 0.5 : 1,
       }}
     >
       <Box
-        component="button"
-        onClick={toggleCheck}
-        aria-label={
-          completed ? `Uncheck step "${step.title}"` : `Mark step "${step.title}" done`
-        }
         sx={{
-          all: "unset",
-          cursor: updateStep.isPending ? "default" : "pointer",
-          color: ink,
-          display: "inline-flex",
+          display: "flex",
           alignItems: "center",
-        }}
-      >
-        {completed ? (
-          <CheckBoxIcon sx={{ fontSize: 16, color: pink }} />
-        ) : (
-          <CheckBoxOutlineBlankIcon sx={{ fontSize: 16, color: ink }} />
-        )}
-      </Box>
-      <Typography
-        sx={{
-          flexGrow: 1,
-          fontFamily: mono,
-          fontSize: 11.5,
-          fontWeight: isCurrent ? 500 : 400,
-          textDecoration: completed ? "line-through" : "none",
-          color: completed ? inkFaint : ink,
-          lineHeight: 1.3,
+          gap: 0.5,
+          px: 0.5,
+          py: 0.35,
         }}
       >
         <Box
-          component="span"
+          component="button"
+          onClick={toggleCheck}
+          aria-label={
+            completed ? `Uncheck step "${step.title}"` : `Mark step "${step.title}" done`
+          }
           sx={{
-            color: isCurrent ? ink : inkDim,
-            fontWeight: 500,
-            mr: 0.75,
+            all: "unset",
+            cursor: updateStep.isPending ? "default" : "pointer",
+            color: ink,
+            display: "inline-flex",
+            alignItems: "center",
           }}
         >
-          {String(index + 1).padStart(2, "0")}.
+          {completed ? (
+            <CheckBoxIcon sx={{ fontSize: 16, color: pink }} />
+          ) : (
+            <CheckBoxOutlineBlankIcon sx={{ fontSize: 16, color: ink }} />
+          )}
         </Box>
-        {step.title}
-      </Typography>
-      <Typography
-        sx={{
-          fontFamily: mono,
-          fontSize: 10,
-          letterSpacing: "0.05em",
-          color: completed ? inkFaint : inkDim,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {step.estimateMinutes}m
-      </Typography>
+        <Typography
+          sx={{
+            flexGrow: 1,
+            fontFamily: mono,
+            fontSize: 11.5,
+            fontWeight: isCurrent ? 500 : 400,
+            textDecoration: completed ? "line-through" : "none",
+            color: completed ? inkFaint : ink,
+            lineHeight: 1.3,
+          }}
+        >
+          <Box
+            component="span"
+            sx={{
+              color: isCurrent ? ink : inkDim,
+              fontWeight: 500,
+              mr: 0.75,
+            }}
+          >
+            {String(index + 1).padStart(2, "0")}.
+          </Box>
+          {step.title}
+        </Typography>
+        <Typography
+          sx={{
+            fontFamily: mono,
+            fontSize: 10,
+            letterSpacing: "0.05em",
+            color: completed ? inkFaint : inkDim,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {step.estimateMinutes}m
+        </Typography>
+      </Box>
+      {step.notes && step.notes.trim().length > 0 && (
+        <Typography
+          sx={{
+            fontFamily: mono,
+            fontSize: 10.5,
+            color: inkDim,
+            lineHeight: 1.35,
+            pl: 3.25,
+            pr: 1,
+            pb: 0.5,
+            whiteSpace: "pre-wrap",
+            textDecoration: completed ? "line-through" : "none",
+          }}
+        >
+          {step.notes}
+        </Typography>
+      )}
     </Box>
   );
 }
