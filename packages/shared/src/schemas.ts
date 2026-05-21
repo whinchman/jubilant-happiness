@@ -37,6 +37,7 @@ export type CreateStepInput = z.infer<typeof createStepSchema>;
 export const updateStepSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   estimateMinutes: z.number().int().min(1).max(240).optional(),
+  notes: z.string().max(2000).optional(),
   /** Toggle completion. true = check (sets completedAt = now). false = uncheck. */
   completed: z.boolean().optional(),
 });

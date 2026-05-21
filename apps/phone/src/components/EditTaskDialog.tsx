@@ -410,6 +410,7 @@ interface StepRowProps {
 function StepRow({ step, choreId, index, autoFocus, onAutoFocused }: StepRowProps) {
   const [title, setTitle] = useState(step.title);
   const [estimate, setEstimate] = useState(String(step.estimateMinutes));
+  const [notesText, setNotesText] = useState(step.notes);
   const titleRef = useRef<HTMLInputElement | null>(null);
 
   const updateStep = useUpdateStep();
@@ -418,7 +419,8 @@ function StepRow({ step, choreId, index, autoFocus, onAutoFocused }: StepRowProp
   useEffect(() => {
     setTitle(step.title);
     setEstimate(String(step.estimateMinutes));
-  }, [step.title, step.estimateMinutes]);
+    setNotesText(step.notes);
+  }, [step.title, step.estimateMinutes, step.notes]);
 
   useEffect(() => {
     if (autoFocus && titleRef.current) {
@@ -457,6 +459,16 @@ function StepRow({ step, choreId, index, autoFocus, onAutoFocused }: StepRowProp
     });
   }
 
+  function commitNotes() {
+    const trimmed = notesText.trim();
+    if (trimmed === (step.notes ?? "")) return;
+    updateStep.mutate({
+      choreId,
+      stepId: step.id,
+      input: { notes: trimmed },
+    });
+  }
+
   function toggleCompleted() {
     updateStep.mutate({
       choreId,
@@ -473,9 +485,6 @@ function StepRow({ step, choreId, index, autoFocus, onAutoFocused }: StepRowProp
     <Box
       ref={setNodeRef}
       sx={{
-        display: "flex",
-        alignItems: "stretch",
-        gap: 0,
         opacity: isDragging ? 0.5 : 1,
         transform: CSS.Transform.toString(transform),
         transition,
@@ -483,121 +492,145 @@ function StepRow({ step, choreId, index, autoFocus, onAutoFocused }: StepRowProp
         bgcolor: bgCard,
       }}
     >
-      <Box
-        sx={{
-          bgcolor: completed ? bg : ink,
-          color: completed ? inkFaint : bg,
-          fontFamily: display,
-          fontWeight: 800,
-          fontSize: 14,
-          px: 0.75,
-          minWidth: 32,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRight: `2px solid ${ink}`,
-        }}
-      >
-        {String(index + 1).padStart(2, "0")}
+      <Box sx={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+        <Box
+          sx={{
+            bgcolor: completed ? bg : ink,
+            color: completed ? inkFaint : bg,
+            fontFamily: display,
+            fontWeight: 800,
+            fontSize: 14,
+            px: 0.75,
+            minWidth: 32,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRight: `2px solid ${ink}`,
+          }}
+        >
+          {String(index + 1).padStart(2, "0")}
+        </Box>
+        <IconButton
+          size="small"
+          onClick={toggleCompleted}
+          disabled={updateStep.isPending}
+          aria-label={completed ? "uncheck step" : "check step"}
+          sx={{ borderRadius: 0, p: 0.5, color: ink, "&:hover": { color: pink } }}
+        >
+          {completed ? (
+            <CheckBoxIcon fontSize="small" sx={{ color: pink }} />
+          ) : (
+            <CheckBoxOutlineBlankIcon fontSize="small" />
+          )}
+        </IconButton>
+        <TextField
+          inputRef={titleRef}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onBlur={commitTitle}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+          }}
+          variant="standard"
+          size="small"
+          sx={{
+            flexGrow: 1,
+            alignSelf: "center",
+            "& .MuiInput-input": {
+              fontFamily: mono,
+              fontSize: 13,
+              textDecoration: completed ? "line-through" : "none",
+              color: completed ? inkFaint : ink,
+            },
+          }}
+          slotProps={{ input: { disableUnderline: true } }}
+        />
+        <TextField
+          value={estimate}
+          type="number"
+          onChange={(e) => setEstimate(e.target.value)}
+          onBlur={commitEstimate}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+          }}
+          variant="standard"
+          size="small"
+          sx={{
+            width: 42,
+            alignSelf: "center",
+            "& .MuiInput-input": {
+              fontFamily: mono,
+              fontSize: 12,
+              textAlign: "right",
+            },
+          }}
+          slotProps={{ input: { disableUnderline: true } }}
+        />
+        <Typography
+          sx={{
+            fontFamily: mono,
+            fontSize: 10.5,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: inkDim,
+            alignSelf: "center",
+            mr: 0.5,
+          }}
+        >
+          m
+        </Typography>
+        <IconButton
+          size="small"
+          aria-label="Drag step"
+          {...attributes}
+          {...listeners}
+          sx={{
+            cursor: "grab",
+            borderRadius: 0,
+            p: 0.5,
+            borderLeft: `2px solid ${ink}`,
+            "&:hover": { color: pink },
+          }}
+        >
+          <DragIndicatorIcon fontSize="small" />
+        </IconButton>
+        <IconButton
+          size="small"
+          aria-label="Delete step"
+          onClick={remove}
+          disabled={deleteStep.isPending}
+          sx={{
+            borderRadius: 0,
+            p: 0.5,
+            borderLeft: `2px solid ${ink}`,
+            "&:hover": { color: pink },
+          }}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
       </Box>
-      <IconButton
-        size="small"
-        onClick={toggleCompleted}
-        disabled={updateStep.isPending}
-        aria-label={completed ? "uncheck step" : "check step"}
-        sx={{ borderRadius: 0, p: 0.5, color: ink, "&:hover": { color: pink } }}
-      >
-        {completed ? (
-          <CheckBoxIcon fontSize="small" sx={{ color: pink }} />
-        ) : (
-          <CheckBoxOutlineBlankIcon fontSize="small" />
-        )}
-      </IconButton>
       <TextField
-        inputRef={titleRef}
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onBlur={commitTitle}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-        }}
-        variant="standard"
+        value={notesText}
+        onChange={(e) => setNotesText(e.target.value)}
+        onBlur={commitNotes}
+        placeholder="items / notes for this step"
+        multiline
         size="small"
+        fullWidth
+        slotProps={{ input: { disableUnderline: true } }}
+        variant="standard"
         sx={{
-          flexGrow: 1,
-          alignSelf: "center",
+          borderTop: `2px solid ${ink}`,
+          px: 1,
+          py: 0.5,
           "& .MuiInput-input": {
             fontFamily: mono,
-            fontSize: 13,
-            textDecoration: completed ? "line-through" : "none",
-            color: completed ? inkFaint : ink,
+            fontSize: 11,
+            color: inkDim,
+            lineHeight: 1.35,
           },
         }}
-        slotProps={{ input: { disableUnderline: true } }}
       />
-      <TextField
-        value={estimate}
-        type="number"
-        onChange={(e) => setEstimate(e.target.value)}
-        onBlur={commitEstimate}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-        }}
-        variant="standard"
-        size="small"
-        sx={{
-          width: 42,
-          alignSelf: "center",
-          "& .MuiInput-input": {
-            fontFamily: mono,
-            fontSize: 12,
-            textAlign: "right",
-          },
-        }}
-        slotProps={{ input: { disableUnderline: true } }}
-      />
-      <Typography
-        sx={{
-          fontFamily: mono,
-          fontSize: 10.5,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: inkDim,
-          alignSelf: "center",
-          mr: 0.5,
-        }}
-      >
-        m
-      </Typography>
-      <IconButton
-        size="small"
-        aria-label="Drag step"
-        {...attributes}
-        {...listeners}
-        sx={{
-          cursor: "grab",
-          borderRadius: 0,
-          p: 0.5,
-          borderLeft: `2px solid ${ink}`,
-          "&:hover": { color: pink },
-        }}
-      >
-        <DragIndicatorIcon fontSize="small" />
-      </IconButton>
-      <IconButton
-        size="small"
-        aria-label="Delete step"
-        onClick={remove}
-        disabled={deleteStep.isPending}
-        sx={{
-          borderRadius: 0,
-          p: 0.5,
-          borderLeft: `2px solid ${ink}`,
-          "&:hover": { color: pink },
-        }}
-      >
-        <DeleteIcon fontSize="small" />
-      </IconButton>
     </Box>
   );
 }

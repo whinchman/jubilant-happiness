@@ -99,6 +99,9 @@ export const stepRoutes: FastifyPluginAsync = async (app) => {
       if (parsed.data.estimateMinutes !== undefined) {
         next.estimateMinutes = parsed.data.estimateMinutes;
       }
+      if (parsed.data.notes !== undefined) {
+        next.notes = parsed.data.notes;
+      }
       if (parsed.data.completed !== undefined) {
         next.completedAt = parsed.data.completed ? now : null;
       }
