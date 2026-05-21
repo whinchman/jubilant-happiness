@@ -31,6 +31,8 @@ interface EditableStep {
   key: string;
   title: string;
   estimate: string;
+  notes: string;
+  notesExpanded: boolean;
 }
 
 interface BreakdownReviewProps {
@@ -61,6 +63,8 @@ export function BreakdownReview({
       key: nextKey(),
       title: s.title,
       estimate: String(s.estimateMinutes),
+      notes: s.notes ?? "",
+      notesExpanded: false,
     })),
   );
 
@@ -73,7 +77,7 @@ export function BreakdownReview({
   function addStep() {
     setSteps((prev) => [
       ...prev,
-      { key: nextKey(), title: "", estimate: "5" },
+      { key: nextKey(), title: "", estimate: "5", notes: "", notesExpanded: false },
     ]);
   }
 
@@ -81,6 +85,7 @@ export function BreakdownReview({
     .map((s) => ({
       title: s.title.trim(),
       estimateMinutes: Number(s.estimate),
+      notes: s.notes.trim() || undefined,
     }))
     .filter(
       (s) =>
@@ -188,74 +193,107 @@ export function BreakdownReview({
           <Box
             key={step.key}
             sx={{
-              display: "flex",
-              gap: 1,
-              alignItems: "flex-start",
               bgcolor: bgCard,
               border: `2px solid ${ink}`,
               p: 1,
             }}
           >
-            <Box
-              sx={{
-                bgcolor: ink,
-                color: bg,
-                fontFamily: display,
-                fontWeight: 800,
-                fontSize: 18,
-                px: 0.75,
-                py: 0.5,
-                minWidth: 32,
-                textAlign: "center",
-                lineHeight: 1.1,
-              }}
-            >
-              {String(index + 1).padStart(2, "0")}
+            <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+              <Box
+                sx={{
+                  bgcolor: ink,
+                  color: bg,
+                  fontFamily: display,
+                  fontWeight: 800,
+                  fontSize: 18,
+                  px: 0.75,
+                  py: 0.5,
+                  minWidth: 32,
+                  textAlign: "center",
+                  lineHeight: 1.1,
+                }}
+              >
+                {String(index + 1).padStart(2, "0")}
+              </Box>
+              <TextField
+                value={step.title}
+                onChange={(e) => updateStep(step.key, { title: e.target.value })}
+                placeholder="step"
+                size="small"
+                fullWidth
+                multiline
+                sx={{
+                  "& .MuiOutlinedInput-root": { borderWidth: 0 },
+                  "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                }}
+              />
+              <TextField
+                value={step.estimate}
+                onChange={(e) => updateStep(step.key, { estimate: e.target.value })}
+                type="number"
+                size="small"
+                sx={{
+                  width: 70,
+                  "& input": { textAlign: "right" },
+                  "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                }}
+              />
+              <Typography
+                sx={{
+                  fontFamily: mono,
+                  fontSize: 11,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: inkDim,
+                  alignSelf: "center",
+                  pr: 0.5,
+                }}
+              >
+                m
+              </Typography>
+              <IconButton
+                onClick={() => removeStep(step.key)}
+                aria-label="Remove step"
+                size="small"
+                sx={{ alignSelf: "flex-start", "&:hover": { color: pink } }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
             </Box>
-            <TextField
-              value={step.title}
-              onChange={(e) => updateStep(step.key, { title: e.target.value })}
-              placeholder="step"
-              size="small"
-              fullWidth
-              multiline
-              sx={{
-                "& .MuiOutlinedInput-root": { borderWidth: 0 },
-                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-              }}
-            />
-            <TextField
-              value={step.estimate}
-              onChange={(e) => updateStep(step.key, { estimate: e.target.value })}
-              type="number"
-              size="small"
-              sx={{
-                width: 70,
-                "& input": { textAlign: "right" },
-                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-              }}
-            />
-            <Typography
-              sx={{
-                fontFamily: mono,
-                fontSize: 11,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: inkDim,
-                alignSelf: "center",
-                pr: 0.5,
-              }}
-            >
-              m
-            </Typography>
-            <IconButton
-              onClick={() => removeStep(step.key)}
-              aria-label="Remove step"
-              size="small"
-              sx={{ alignSelf: "flex-start", "&:hover": { color: pink } }}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+            {(step.notes.length > 0 || step.notesExpanded) ? (
+              <TextField
+                value={step.notes}
+                onChange={(e) => updateStep(step.key, { notes: e.target.value })}
+                placeholder="items in this step (comma-separated)"
+                size="small"
+                fullWidth
+                multiline
+                sx={{
+                  mt: 0.75,
+                  "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                  "& textarea": {
+                    fontFamily: mono,
+                    fontSize: 11,
+                    color: inkDim,
+                  },
+                }}
+              />
+            ) : (
+              <Box
+                onClick={() => updateStep(step.key, { notesExpanded: true })}
+                sx={{
+                  mt: 0.5,
+                  fontFamily: mono,
+                  fontSize: 10,
+                  color: inkDim,
+                  cursor: "pointer",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                }}
+              >
+                + add items
+              </Box>
+            )}
           </Box>
         ))}
       </Stack>
