@@ -1,13 +1,14 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyPluginAsync } from "fastify";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import {
   createTaskSchema,
   moveTaskSchema,
   updateTaskSchema,
 } from "@todoer/shared";
 import { db } from "../db/client";
-import { tasks } from "../db/schema";
+import { tasks, megaChores } from "../db/schema";
+import { attachMegaChoreState } from "../services/board-blocked";
 import { endPosition, movePosition } from "../lib/position";
 
 function findTask(userId: string, id: string) {
@@ -94,6 +95,51 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
       return reply.code(400).send({ error: "invalid_input", issues: parsed.error.issues });
     }
     const { lane, beforeId, afterId } = parsed.data;
+
+    // Blocked mega-chore chores cannot enter "doing." Detect cheaply by
+    // computing membership for this chore's mega-chore (if any) and asking the
+    // shared derivation function. This keeps the rule in one place.
+    if (lane === "doing" && existing.megaChoreId !== null && existing.megaChoreGroup !== null) {
+      const siblings = db
+        .select()
+        .from(tasks)
+        .where(
+          and(
+            eq(tasks.userId, req.userId),
+            eq(tasks.megaChoreId, existing.megaChoreId),
+            isNull(tasks.parentId),
+          ),
+        )
+        .all();
+      const titleRow = db
+        .select()
+        .from(megaChores)
+        .where(eq(megaChores.id, existing.megaChoreId))
+        .get();
+      const totalGroups = siblings.reduce(
+        (acc, s) => (s.megaChoreGroup && s.megaChoreGroup > acc ? s.megaChoreGroup : acc),
+        0,
+      );
+      const memberships = siblings
+        .filter((s) => s.megaChoreGroup !== null)
+        .map((s) => ({
+          choreId: s.id,
+          megaChoreId: s.megaChoreId as string,
+          group: s.megaChoreGroup as number,
+          completedAt: s.completedAt,
+        }));
+      const decorated = attachMegaChoreState(
+        siblings.map((s) => ({ ...s, steps: [] })),
+        new Map([[existing.megaChoreId, titleRow?.title ?? ""]]),
+        new Map([[existing.megaChoreId, totalGroups]]),
+        memberships,
+      );
+      const me = decorated.find((d) => d.id === existing.id);
+      if (me?.isBlocked) {
+        return reply.code(409).send({ error: "blocked_by_mega_chore" });
+      }
+    }
+
     const position = movePosition(req.userId, lane, req.params.id, { beforeId, afterId });
 
     const enteringDone = lane === "done" && existing.lane !== "done";

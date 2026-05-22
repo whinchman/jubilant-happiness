@@ -42,7 +42,7 @@ export function TaskCard({ chore, onClick, flat = false, lane }: TaskCardProps) 
   const estimateLabel = formatEstimate(chore);
   const tilt = flat ? 0 : stableTilt(chore.id);
   const isDone = lane === "done";
-  const showStart = !flat && !isDone && hasFocusableWork(chore);
+  const showStart = !flat && !isDone && !chore.isBlocked && hasFocusableWork(chore);
 
   function handleStart(e: React.MouseEvent) {
     e.stopPropagation();
@@ -62,7 +62,7 @@ export function TaskCard({ chore, onClick, flat = false, lane }: TaskCardProps) 
         transition: "transform 120ms ease, box-shadow 120ms ease",
         cursor: onClick ? "pointer" : "inherit",
         position: "relative",
-        opacity: isDone ? 0.7 : 1,
+        opacity: isDone ? 0.7 : chore.isBlocked ? 0.55 : 1,
         "&:hover": {
           transform: `rotate(${tilt}deg) translate(-2px, -2px)`,
           boxShadow: `5px 5px 0 0 ${pink}`,
@@ -112,6 +112,20 @@ export function TaskCard({ chore, onClick, flat = false, lane }: TaskCardProps) 
         </Box>
       )}
       <CardContent sx={{ py: 1.5, px: 1.75, "&:last-child": { pb: 1.5 } }}>
+        {chore.megaChore && (
+          <Typography
+            sx={{
+              fontFamily: mono,
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              color: inkDim,
+              mb: 0.5,
+            }}
+          >
+            {chore.megaChore.title} · g{chore.megaChore.group}/{chore.megaChore.totalGroups}
+          </Typography>
+        )}
         <Typography
           sx={{
             fontFamily: display,
@@ -151,7 +165,7 @@ export function TaskCard({ chore, onClick, flat = false, lane }: TaskCardProps) 
           )}
         </Stack>
 
-        {steps.length > 0 && (
+        {!chore.isBlocked && steps.length > 0 && (
           <Box
             sx={{
               mt: 1.25,
@@ -171,6 +185,19 @@ export function TaskCard({ chore, onClick, flat = false, lane }: TaskCardProps) 
               ))}
             </Stack>
           </Box>
+        )}
+        {chore.isBlocked && chore.megaChore && (
+          <Typography
+            sx={{
+              fontFamily: mono,
+              fontSize: 11,
+              fontStyle: "italic",
+              color: inkDim,
+              mt: 1,
+            }}
+          >
+            blocked — finish group {chore.megaChore.group - 1} first.
+          </Typography>
         )}
       </CardContent>
     </Card>

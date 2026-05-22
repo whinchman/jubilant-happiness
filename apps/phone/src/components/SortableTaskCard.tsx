@@ -11,7 +11,7 @@ interface SortableTaskCardProps {
 
 export function SortableTaskCard({ chore, onClick, lane }: SortableTaskCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: chore.id });
+    useSortable({ id: chore.id, disabled: chore.isBlocked === true });
 
   return (
     <div
@@ -20,7 +20,7 @@ export function SortableTaskCard({ chore, onClick, lane }: SortableTaskCardProps
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.35 : 1,
-        cursor: "grab",
+        cursor: chore.isBlocked ? "default" : "grab",
         touchAction: "manipulation",
       }}
       {...attributes}

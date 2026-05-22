@@ -26,8 +26,8 @@ describe("KITS registry", () => {
     expect(findKit("packing")?.enabled).toBe(true);
   });
 
-  it("mega-chore exists and is disabled", () => {
-    expect(findKit("mega-chore")?.enabled).toBe(false);
+  it("mega-chore is enabled", () => {
+    expect(findKit("mega-chore")?.enabled).toBe(true);
   });
 });
 
