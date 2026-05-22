@@ -175,3 +175,24 @@ export function logout(): Promise<void> {
     body: JSON.stringify({}),
   });
 }
+
+export function postMegaChoreTurn(
+  input: import("./schemas").MegaChoreTurnRequest,
+): Promise<import("./types").MegaChoreTurn> {
+  return request<import("./types").MegaChoreTurn>("/kits/mega-chore/turn", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function acceptMegaChoreBreakdown(
+  input: import("./schemas").AcceptMegaChoreBreakdownInput,
+): Promise<{ megaChoreId: string; choreIds: string[] }> {
+  return request<{ megaChoreId: string; choreIds: string[] }>(
+    "/kits/mega-chore/accept",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  );
+}
