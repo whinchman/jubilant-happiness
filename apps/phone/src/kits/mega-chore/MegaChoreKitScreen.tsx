@@ -92,6 +92,50 @@ export function MegaChoreKitScreen() {
     );
   }
 
+  function sendTurn(forceFinalize: boolean) {
+    if (state.kind !== "chat") return;
+    if (!forceFinalize && state.draft.trim().length === 0) return;
+    const userMessages = forceFinalize
+      ? state.messages
+      : [...state.messages, { role: "user", content: state.draft.trim() } as ChatMessage];
+
+    // Optimistically show the user's message immediately.
+    if (!forceFinalize) {
+      setState({ ...state, messages: userMessages, draft: "", error: null });
+    } else {
+      setState({ ...state, error: null });
+    }
+    turn.mutate(
+      { messages: userMessages, forceFinalize },
+      {
+        onSuccess: (resp) => {
+          if (resp.kind === "question") {
+            setState({
+              kind: "chat",
+              messages: [
+                ...userMessages,
+                { role: "assistant", content: resp.assistantMessage },
+              ],
+              draft: "",
+              error: null,
+            });
+          } else {
+            setState({ kind: "review", preview: resp.preview });
+          }
+        },
+        onError: (err) => {
+          const msg =
+            err instanceof ApiError && err.status === 429
+              ? "hit the mega chore kit rate limit — try again in a bit."
+              : "couldn't reach the ai — try again.";
+          setState((prev) =>
+            prev.kind === "chat" ? { ...prev, error: msg } : prev,
+          );
+        },
+      },
+    );
+  }
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
       <Box sx={{ bgcolor: ink, color: bg }}>
@@ -211,15 +255,94 @@ export function MegaChoreKitScreen() {
           </Box>
         )}
         {state.kind === "chat" && (
-          <Box sx={{ p: 3, color: inkDim }}>
-            <Typography>chat state — TBD next task</Typography>
-            <Stack sx={{ mt: 2 }} spacing={1}>
-              {state.messages.map((m, i) => (
-                <Box key={i} sx={{ fontFamily: mono, fontSize: 12 }}>
-                  <b>{m.role}:</b> {m.content}
-                </Box>
-              ))}
-            </Stack>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              maxWidth: 540,
+              mx: "auto",
+              width: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                position: "sticky",
+                top: 0,
+                bgcolor: bg,
+                borderBottom: `2px solid ${ink}`,
+                px: 2,
+                py: 1.25,
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Button
+                variant="outlined"
+                size="small"
+                disabled={turn.isPending}
+                onClick={() => sendTurn(true)}
+                sx={{ fontFamily: mono, fontSize: 12 }}
+              >
+                just give me the breakdown
+              </Button>
+            </Box>
+
+            <Box sx={{ flexGrow: 1, overflowY: "auto", p: 2 }}>
+              <Stack spacing={1.5}>
+                {state.messages.map((m, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+                      bgcolor: m.role === "user" ? ink : pink,
+                      color: m.role === "user" ? bg : ink,
+                      border: `2px solid ${ink}`,
+                      px: 1.5,
+                      py: 1,
+                      maxWidth: "80%",
+                      fontFamily: mono,
+                      fontSize: 13,
+                      lineHeight: 1.4,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {m.content}
+                  </Box>
+                ))}
+                {turn.isPending && (
+                  <Box sx={{ alignSelf: "flex-start", color: inkDim, fontFamily: mono, fontSize: 12 }}>
+                    thinking…
+                  </Box>
+                )}
+              </Stack>
+            </Box>
+
+            <Box sx={{ p: 2, borderTop: `2px solid ${ink}`, bgcolor: bg }}>
+              {state.error && (
+                <Alert severity="warning" sx={{ mb: 1 }}>{state.error}</Alert>
+              )}
+              <Stack direction="row" spacing={1}>
+                <TextField
+                  value={state.draft}
+                  onChange={(e) =>
+                    setState({ ...state, draft: e.target.value })
+                  }
+                  placeholder="reply…"
+                  multiline
+                  maxRows={4}
+                  fullWidth
+                  disabled={turn.isPending}
+                />
+                <Button
+                  variant="contained"
+                  disabled={turn.isPending || state.draft.trim().length === 0}
+                  onClick={() => sendTurn(false)}
+                >
+                  send
+                </Button>
+              </Stack>
+            </Box>
           </Box>
         )}
         {state.kind === "review" && (
