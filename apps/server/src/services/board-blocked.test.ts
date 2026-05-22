@@ -29,8 +29,7 @@ function mkChore(
     completedAt: m.completedAt,
     createdAt: 0,
     steps: [],
-    // these two are not on the type — passed through attach via the row map
-  } as ChoreWithSteps & { _m: MegaInput };
+  } satisfies ChoreWithSteps;
 }
 
 describe("attachMegaChoreState", () => {
@@ -40,8 +39,8 @@ describe("attachMegaChoreState", () => {
       new Map(),
       new Map(),
     );
-    expect(out[0].megaChore).toBeUndefined();
-    expect(out[0].isBlocked).toBe(false);
+    expect(out[0]!.megaChore).toBeUndefined();
+    expect(out[0]!.isBlocked).toBe(false);
   });
 
   it("marks group 2 blocked when group 1 has incomplete chores", () => {
@@ -55,14 +54,14 @@ describe("attachMegaChoreState", () => {
       { choreId: "a", megaChoreId: "m1", group: 1, completedAt: null },
       { choreId: "b", megaChoreId: "m1", group: 2, completedAt: null },
     ]);
-    expect(out[0].megaChore).toEqual({
+    expect(out[0]!.megaChore).toEqual({
       id: "m1",
       title: "Clean the garage",
       group: 1,
       totalGroups: 2,
     });
-    expect(out[0].isBlocked).toBe(false);
-    expect(out[1].isBlocked).toBe(true);
+    expect(out[0]!.isBlocked).toBe(false);
+    expect(out[1]!.isBlocked).toBe(true);
   });
 
   it("unblocks group 2 once all group-1 chores are done", () => {
@@ -76,7 +75,7 @@ describe("attachMegaChoreState", () => {
       { choreId: "a", megaChoreId: "m1", group: 1, completedAt: 1 },
       { choreId: "b", megaChoreId: "m1", group: 2, completedAt: null },
     ]);
-    expect(out[1].isBlocked).toBe(false);
+    expect(out[1]!.isBlocked).toBe(false);
   });
 
   it("keeps group 3 blocked when group 2 still has work", () => {
@@ -91,9 +90,9 @@ describe("attachMegaChoreState", () => {
       { choreId: "b", megaChoreId: "m1", group: 2, completedAt: null },
       { choreId: "c", megaChoreId: "m1", group: 3, completedAt: null },
     ]);
-    expect(out[0].isBlocked).toBe(false);
-    expect(out[1].isBlocked).toBe(false);
-    expect(out[2].isBlocked).toBe(true);
+    expect(out[0]!.isBlocked).toBe(false);
+    expect(out[1]!.isBlocked).toBe(false);
+    expect(out[2]!.isBlocked).toBe(true);
   });
 
   it("unblocks all when every chore is done", () => {
@@ -106,7 +105,7 @@ describe("attachMegaChoreState", () => {
       { choreId: "a", megaChoreId: "m1", group: 1, completedAt: 1 },
       { choreId: "b", megaChoreId: "m1", group: 2, completedAt: 1 },
     ]);
-    expect(out[0].isBlocked).toBe(false);
-    expect(out[1].isBlocked).toBe(false);
+    expect(out[0]!.isBlocked).toBe(false);
+    expect(out[1]!.isBlocked).toBe(false);
   });
 });
