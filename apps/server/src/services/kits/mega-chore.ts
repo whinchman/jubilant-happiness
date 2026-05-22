@@ -1,6 +1,10 @@
+import { randomUUID } from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
-import type { ChatMessage } from "@todoer/shared";
+import { and, eq, isNull, sql } from "drizzle-orm";
+import type { AcceptMegaChoreBreakdownInput, ChatMessage } from "@todoer/shared";
 import { megaChoreTurnResponseSchema, type MegaChoreTurn } from "@todoer/shared";
+import { db } from "../../db/client";
+import { megaChores, projects, tasks } from "../../db/schema";
 
 export const MEGA_CHORE_SYSTEM_PROMPT = `You are turning ONE huge thing into 2-10 ordered chores for someone with ADHD. The user will describe a task that is too big for a normal AI breakdown — either it's really a project disguised as a chore, or one of its natural steps would itself take hours.
 
@@ -135,4 +139,105 @@ export async function callMegaChoreTurn(
     throw new Error("the model did not return a mega-chore turn");
   }
   return parseMegaChoreToolResponse(toolUse.input);
+}
+
+export interface AcceptMegaChoreResult {
+  megaChoreId: string;
+  choreIds: string[];
+}
+
+/**
+ * Inserts one mega-chore row plus N chore rows (each with a project + steps).
+ * All chores share `area`, land in `ready`, and reference the new mega-chore.
+ * Wrapped in a single transaction — any insert error rolls everything back.
+ */
+export function acceptMegaChoreBreakdown(
+  userId: string,
+  input: AcceptMegaChoreBreakdownInput,
+): AcceptMegaChoreResult {
+  const now = Date.now();
+  const megaChoreId = randomUUID();
+
+  return db.transaction((tx) => {
+    tx.insert(megaChores)
+      .values({
+        id: megaChoreId,
+        userId,
+        title: input.megaChore.title,
+        createdAt: now,
+      })
+      .run();
+
+    // Find current end position in 'ready' for this user — every new chore
+    // appends and increments.
+    const last = tx
+      .select({ position: tasks.position })
+      .from(tasks)
+      .where(
+        and(eq(tasks.userId, userId), eq(tasks.lane, "ready"), isNull(tasks.parentId)),
+      )
+      .orderBy(sql`${tasks.position} desc`)
+      .limit(1)
+      .get();
+    let position = last !== undefined ? last.position + 1 : 1;
+    const choreIds: string[] = [];
+
+    for (const chore of input.chores) {
+      const projectId = randomUUID();
+      const choreId = randomUUID();
+      tx.insert(projects)
+        .values({ id: projectId, userId, title: chore.title, createdAt: now })
+        .run();
+
+      tx.insert(tasks)
+        .values({
+          id: choreId,
+          userId,
+          projectId,
+          parentId: null,
+          title: chore.title,
+          notes: "",
+          area: input.area,
+          estimateMinutes: chore.estimateMinutes,
+          lane: "ready",
+          position,
+          isRepeating: false,
+          lastCompletedAt: null,
+          completedAt: null,
+          megaChoreId,
+          megaChoreGroup: chore.group,
+          createdAt: now,
+        })
+        .run();
+      choreIds.push(choreId);
+      position += 1;
+
+      let stepPosition = 1;
+      for (const step of chore.steps) {
+        tx.insert(tasks)
+          .values({
+            id: randomUUID(),
+            userId,
+            projectId: null,
+            parentId: choreId,
+            title: step.title,
+            notes: step.notes ?? "",
+            area: null,
+            estimateMinutes: step.estimateMinutes,
+            lane: "ready",
+            position: stepPosition,
+            isRepeating: false,
+            lastCompletedAt: null,
+            completedAt: null,
+            megaChoreId: null,
+            megaChoreGroup: null,
+            createdAt: now,
+          })
+          .run();
+        stepPosition += 1;
+      }
+    }
+
+    return { megaChoreId, choreIds };
+  });
 }
