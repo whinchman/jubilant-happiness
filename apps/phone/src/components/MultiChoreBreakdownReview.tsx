@@ -34,6 +34,7 @@ interface EditableStep {
   title: string;
   estimate: string;
   notes: string;
+  notesExpanded: boolean;
 }
 
 interface EditableChore {
@@ -79,6 +80,7 @@ export function MultiChoreBreakdownReview({
         title: s.title,
         estimate: String(s.estimateMinutes),
         notes: s.notes ?? "",
+        notesExpanded: false,
       })),
     })),
   );
@@ -316,31 +318,83 @@ export function MultiChoreBreakdownReview({
                   {c.expanded && (
                     <Stack spacing={0.75} sx={{ mt: 1.25 }}>
                       {c.steps.map((s) => (
-                        <Stack
-                          key={s.key}
-                          direction="row"
-                          spacing={1}
-                          sx={{ alignItems: "flex-start" }}
-                        >
-                          <TextField
-                            value={s.title}
-                            onChange={(e) =>
-                              updateStep(c.key, s.key, "title", e.target.value)
-                            }
-                            placeholder="step"
-                            fullWidth
-                            size="small"
-                          />
-                          <TextField
-                            value={s.estimate}
-                            onChange={(e) =>
-                              updateStep(c.key, s.key, "estimate", e.target.value)
-                            }
-                            size="small"
-                            sx={{ width: 80 }}
-                            slotProps={{ htmlInput: { inputMode: "numeric" } }}
-                          />
-                        </Stack>
+                        <Box key={s.key}>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{ alignItems: "flex-start" }}
+                          >
+                            <TextField
+                              value={s.title}
+                              onChange={(e) =>
+                                updateStep(c.key, s.key, "title", e.target.value)
+                              }
+                              placeholder="step"
+                              fullWidth
+                              size="small"
+                            />
+                            <TextField
+                              value={s.estimate}
+                              onChange={(e) =>
+                                updateStep(c.key, s.key, "estimate", e.target.value)
+                              }
+                              size="small"
+                              sx={{ width: 80 }}
+                              slotProps={{ htmlInput: { inputMode: "numeric" } }}
+                            />
+                          </Stack>
+                          {s.notes.length > 0 || s.notesExpanded ? (
+                            <TextField
+                              value={s.notes}
+                              onChange={(e) =>
+                                updateStep(c.key, s.key, "notes", e.target.value)
+                              }
+                              placeholder="notes (optional)"
+                              fullWidth
+                              multiline
+                              minRows={1}
+                              maxRows={4}
+                              size="small"
+                              sx={{
+                                mt: 0.5,
+                                "& textarea": {
+                                  fontFamily: mono,
+                                  fontSize: 11,
+                                  color: inkDim,
+                                },
+                                "& .MuiOutlinedInput-notchedOutline": {
+                                  border: "none",
+                                },
+                              }}
+                              slotProps={{ htmlInput: { maxLength: 2000 } }}
+                            />
+                          ) : (
+                            <Box
+                              role="button"
+                              tabIndex={0}
+                              onClick={() =>
+                                updateStep(c.key, s.key, "notesExpanded", true)
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  updateStep(c.key, s.key, "notesExpanded", true);
+                                }
+                              }}
+                              sx={{
+                                mt: 0.5,
+                                fontFamily: mono,
+                                fontSize: 10,
+                                color: inkDim,
+                                cursor: "pointer",
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              + add notes
+                            </Box>
+                          )}
+                        </Box>
                       ))}
                     </Stack>
                   )}
