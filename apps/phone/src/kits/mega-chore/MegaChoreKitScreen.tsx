@@ -18,6 +18,7 @@ import {
   type MegaChoreBreakdownPreview,
 } from "@todoer/shared";
 import { Sticker } from "../../components/Chrome";
+import { MultiChoreBreakdownReview } from "../../components/MultiChoreBreakdownReview";
 import {
   bg,
   blue,
@@ -28,6 +29,8 @@ import {
   pink,
   yellow,
 } from "../../theme";
+import { useAreas } from "../../lib/api-hooks";
+import { useMegaChoreAccept } from "./use-mega-chore-accept";
 import { useMegaChoreTurn } from "./use-mega-chore-turn";
 
 type ScreenState =
@@ -44,6 +47,8 @@ export function MegaChoreKitScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const turn = useMegaChoreTurn();
+  const areas = useAreas();
+  const accept = useMegaChoreAccept();
 
   const prefill =
     typeof (location.state as { prefillText?: unknown } | null)?.prefillText ===
@@ -346,9 +351,16 @@ export function MegaChoreKitScreen() {
           </Box>
         )}
         {state.kind === "review" && (
-          <Box sx={{ p: 3, color: inkDim }}>
-            <Typography>review state — TBD next task</Typography>
-          </Box>
+          <MultiChoreBreakdownReview
+            preview={state.preview}
+            areas={areas.data ?? []}
+            accepting={accept.isPending}
+            error={accept.isError}
+            onAccept={(input) =>
+              accept.mutate(input, { onSuccess: () => navigate("/board") })
+            }
+            onStartOver={() => setState({ kind: "initial", text: prefill })}
+          />
         )}
       </Box>
     </Box>
