@@ -21,8 +21,9 @@ If the input is too vague or is not an actionable task, set isActionable to fals
 
 There are specialized chore generators ("chore kits") that handle some task types better than this open-ended breakdown:
 - "packing" — packing for a trip (destination, nights, who's going, etc.).
+- "mega-chore" — one huge thing that's really a project (e.g. "clean the garage", "build a tick moat", "redo the closet") — too big for steps under 10 minutes each, or where one natural step would itself take hours.
 
-If the input clearly describes a kit-supported task (e.g. "pack for paris", "what to bring for the camping trip"), set isActionable to false, put a short clarification like "this sounds like packing for a trip — try the packing kit", and set suggestedKitKind to the matching kit id (currently only "packing"). Do NOT set suggestedKitKind unless the input matches a supported kit.
+If the input clearly describes a kit-supported task, set isActionable to false, put a short clarification like "this sounds like packing for a trip — try the packing kit" or "this is a mega chore — try the mega chore kit", and set suggestedKitKind to the matching kit id ("packing" or "mega-chore"). Do NOT set suggestedKitKind unless the input matches a supported kit.
 
 Always respond by calling the submit_breakdown tool.`;
 
