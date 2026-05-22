@@ -96,37 +96,97 @@ export function Lane({ laneId, title, chores, onChoreClick }: LaneProps) {
           strategy={verticalListSortingStrategy}
         >
           <Stack spacing={1.5}>
-            {chores.map((chore) => (
-              <SortableTaskCard
-                key={chore.id}
-                chore={chore}
-                lane={laneId}
-                onClick={() => onChoreClick(chore)}
-              />
-            ))}
-            {chores.length === 0 && (
-              <Box
-                sx={{
-                  py: 5,
-                  textAlign: "center",
-                  border: `2px dashed ${ink}`,
-                  opacity: 0.45,
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontFamily: display,
-                    fontWeight: 700,
-                    fontSize: 16,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: inkDim,
-                  }}
-                >
-                  empty
-                </Typography>
-              </Box>
-            )}
+            {(() => {
+              // Only the Ready lane shows a blocked-divider. Other lanes never
+              // contain blocked chores (doing/done are user-driven moves).
+              const unblocked =
+                laneId === "ready"
+                  ? chores.filter((c) => !c.isBlocked)
+                  : chores;
+              const blocked =
+                laneId === "ready"
+                  ? chores.filter((c) => c.isBlocked)
+                  : [];
+              return (
+                <>
+                  {unblocked.map((chore) => (
+                    <SortableTaskCard
+                      key={chore.id}
+                      chore={chore}
+                      lane={laneId}
+                      onClick={() => onChoreClick(chore)}
+                    />
+                  ))}
+                  {blocked.length > 0 && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        my: 0.5,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          flexGrow: 1,
+                          borderBottom: `2px dashed ${ink}`,
+                          opacity: 0.4,
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          fontFamily: mono,
+                          fontSize: 11,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.12em",
+                          color: inkDim,
+                        }}
+                      >
+                        blocked
+                      </Typography>
+                      <Box
+                        sx={{
+                          flexGrow: 1,
+                          borderBottom: `2px dashed ${ink}`,
+                          opacity: 0.4,
+                        }}
+                      />
+                    </Box>
+                  )}
+                  {blocked.map((chore) => (
+                    <SortableTaskCard
+                      key={chore.id}
+                      chore={chore}
+                      lane={laneId}
+                      onClick={() => onChoreClick(chore)}
+                    />
+                  ))}
+                  {chores.length === 0 && (
+                    <Box
+                      sx={{
+                        py: 5,
+                        textAlign: "center",
+                        border: `2px dashed ${ink}`,
+                        opacity: 0.45,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontFamily: display,
+                          fontWeight: 700,
+                          fontSize: 16,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                          color: inkDim,
+                        }}
+                      >
+                        empty
+                      </Typography>
+                    </Box>
+                  )}
+                </>
+              );
+            })()}
           </Stack>
         </SortableContext>
       </Box>
