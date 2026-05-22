@@ -130,7 +130,43 @@ export function FaqScreen() {
 
         <TornRule mt={3} mb={3} />
 
-        <Section number="03" sticker="the doombox" stickerColor="yellow" title="The doombox">
+        <Section number="03" sticker="chore kits" stickerColor="pink" title="Chore kits">
+          <P>
+            sometimes the open-ended ai breakdown is the wrong tool. on the add
+            screen, tap <Strong>use a chore kit</Strong> for a structured form
+            tuned to a recurring shape of task. two kits today:
+          </P>
+          <P>
+            <Strong>packing</Strong> — a trip becomes a packing list. tell it
+            where you're going, how many nights, who's coming, the weather. you
+            get back 5–10 grouped chunks (documents, clothes, toiletries…) with
+            the actual items as notes on each step. the chore lives under an
+            auto-built area like <em>"portland - trip"</em> so all your
+            trip-prep stuff hangs together.
+          </P>
+          <P>
+            <Strong>mega chore</Strong> — one huge thing that's really a
+            project. <em>"clean the garage."</em> <em>"build a tick moat."</em>{" "}
+            describe it and claude asks a few clarifying questions, then splits
+            it into 2–10 ordered chores under a shared <em>mega-chore</em>.
+            each chore is its own card on the board; chores in later groups
+            sit below a <Strong>blocked</Strong> divider in to_do until the
+            previous group is done. finish all the "dig section" chores and
+            "lay gravel" auto-unblocks. if claude won't stop asking, hit{" "}
+            <Strong>just give me the breakdown</Strong> and it ships what it
+            has.
+          </P>
+          <P>
+            also: when you type a kit-shaped task into the regular ai
+            breakdown (<em>"pack for paris"</em>, <em>"redo the closet"</em>),
+            it'll nudge you over to the matching kit instead of trying to fit
+            it into one chore.
+          </P>
+        </Section>
+
+        <TornRule mt={3} mb={3} />
+
+        <Section number="04" sticker="the doombox" stickerColor="yellow" title="The doombox">
           <P>
             a literal box, somewhere in your house. when you're cleaning a room and
             find something that doesn't belong — a stray mug in the bedroom, a sock in
