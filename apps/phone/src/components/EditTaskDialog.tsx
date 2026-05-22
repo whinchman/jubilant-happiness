@@ -174,6 +174,20 @@ export function EditTaskDialog({ choreId, onClose }: EditTaskDialogProps) {
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
+            {chore?.megaChore && (
+              <Typography
+                sx={{
+                  fontFamily: mono,
+                  fontSize: 11,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: inkDim,
+                  mb: 0.75,
+                }}
+              >
+                {chore.megaChore.title} · g{chore.megaChore.group}/{chore.megaChore.totalGroups}
+              </Typography>
+            )}
             <TextField
               label="title"
               value={title}
