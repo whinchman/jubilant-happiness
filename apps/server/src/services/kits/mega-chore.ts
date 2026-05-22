@@ -1,3 +1,5 @@
+import Anthropic from "@anthropic-ai/sdk";
+import type { ChatMessage } from "@todoer/shared";
 import { megaChoreTurnResponseSchema, type MegaChoreTurn } from "@todoer/shared";
 
 export const MEGA_CHORE_SYSTEM_PROMPT = `You are turning ONE huge thing into 2-10 ordered chores for someone with ADHD. The user will describe a task that is too big for a normal AI breakdown — either it's really a project disguised as a chore, or one of its natural steps would itself take hours.
@@ -49,4 +51,88 @@ export function parseMegaChoreToolResponse(raw: unknown): MegaChoreTurn {
     });
   }
   throw new Error("mega-chore tool response has unknown kind");
+}
+
+const TOOL_INPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    kind: { type: "string", enum: ["question", "breakdown"] },
+    text: {
+      type: "string",
+      description: "When kind=question, the next clarifying question to ask the user.",
+    },
+    megaChore: {
+      type: "object",
+      properties: { title: { type: "string" } },
+      required: ["title"],
+      description: "When kind=breakdown, the mega-chore label.",
+    },
+    area: {
+      type: "string",
+      description: "When kind=breakdown, the shared area for all chores.",
+    },
+    chores: {
+      type: "array",
+      minItems: 2,
+      maxItems: 10,
+      description: "When kind=breakdown, the ordered chores.",
+      items: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          estimateMinutes: { type: "integer", minimum: 1, maximum: 600 },
+          group: { type: "integer", minimum: 1, maximum: 20 },
+          steps: {
+            type: "array",
+            minItems: 1,
+            maxItems: 30,
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                estimateMinutes: { type: "integer", minimum: 1, maximum: 240 },
+                notes: { type: "string" },
+              },
+              required: ["title", "estimateMinutes"],
+            },
+          },
+        },
+        required: ["title", "estimateMinutes", "group", "steps"],
+      },
+    },
+  },
+  required: ["kind"],
+} as const;
+
+export async function callMegaChoreTurn(
+  messages: ChatMessage[],
+  forceFinalize: boolean,
+): Promise<import("@todoer/shared").MegaChoreTurn> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
+
+  const client = new Anthropic({ apiKey });
+  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
+
+  const message = await client.messages.create({
+    model,
+    max_tokens: 3000,
+    system: buildMegaChoreSystemPrompt(forceFinalize),
+    tools: [
+      {
+        name: "submit_mega_chore_turn",
+        description:
+          "Either ask one clarifying question OR produce the full mega-chore breakdown.",
+        input_schema: TOOL_INPUT_SCHEMA as unknown as Anthropic.Tool["input_schema"],
+      },
+    ],
+    tool_choice: { type: "tool", name: "submit_mega_chore_turn" },
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+  });
+
+  const toolUse = message.content.find((block) => block.type === "tool_use");
+  if (!toolUse || toolUse.type !== "tool_use") {
+    throw new Error("the model did not return a mega-chore turn");
+  }
+  return parseMegaChoreToolResponse(toolUse.input);
 }
