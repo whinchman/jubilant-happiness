@@ -9,9 +9,10 @@ interface MegaMembership {
 
 /**
  * Attaches `megaChore` and `isBlocked` to each chore in place (returns a new
- * array of new objects). A chore is blocked when its parallel-group index is
- * greater than the highest group whose chores are all `done` ("done" = lane
- * 'done', surfaced here via completedAt being non-null).
+ * array of new objects). A chore is blocked when every group *before* it isn't
+ * fully done yet — equivalently, when its group > (highest fully-done group) + 1.
+ * Group 1 starts unblocked; group K unblocks once every chore in groups 1..K-1
+ * is `done` (lane 'done' / completedAt non-null).
  *
  * Pure function so it is trivially unit-testable: the route caller is
  * responsible for assembling `megaTitles`, `totalGroupsByMega`, and the flat
