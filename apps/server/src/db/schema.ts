@@ -28,6 +28,15 @@ export const projects = sqliteTable("projects", {
   createdAt: integer("created_at").notNull(),
 });
 
+export const megaChores = sqliteTable("mega_chores", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  createdAt: integer("created_at").notNull(),
+});
+
 export const tasks = sqliteTable(
   "tasks",
   {
@@ -54,6 +63,8 @@ export const tasks = sqliteTable(
       .default(false),
     lastCompletedAt: integer("last_completed_at"),
     completedAt: integer("completed_at"),
+    megaChoreId: text("mega_chore_id").references((): AnySQLiteColumn => megaChores.id),
+    megaChoreGroup: integer("mega_chore_group"),
     createdAt: integer("created_at").notNull(),
   },
   (t) => [
@@ -62,8 +73,10 @@ export const tasks = sqliteTable(
     index("idx_tasks_project").on(t.projectId),
     index("idx_tasks_repeating").on(t.isRepeating, t.lastCompletedAt),
     index("idx_tasks_parent").on(t.parentId, t.position),
+    index("idx_tasks_mega_chore").on(t.megaChoreId, t.megaChoreGroup),
   ],
 );
 
 export type TaskRow = typeof tasks.$inferSelect;
 export type ProjectRow = typeof projects.$inferSelect;
+export type MegaChoreRow = typeof megaChores.$inferSelect;
