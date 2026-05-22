@@ -61,7 +61,12 @@ export const kitsRoutes: FastifyPluginAsync = async (app) => {
         .code(400)
         .send({ error: "invalid_input", issues: parsed.error.issues });
     }
-    const result = acceptMegaChoreBreakdown(req.userId, parsed.data);
-    return reply.code(201).send(result);
+    try {
+      const result = acceptMegaChoreBreakdown(req.userId, parsed.data);
+      return reply.code(201).send(result);
+    } catch (err) {
+      req.log.error({ err }, "mega-chore accept failed");
+      return reply.code(503).send({ error: "accept_failed" });
+    }
   });
 };
