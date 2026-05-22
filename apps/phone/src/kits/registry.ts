@@ -21,7 +21,7 @@ export const KITS: readonly KitEntry[] = [
     title: "mega chore",
     blurb: "one huge thing → several chores, each with steps.",
     icon: "MC",
-    enabled: false,
+    enabled: true,
   },
 ];
 
