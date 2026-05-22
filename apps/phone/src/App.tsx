@@ -8,6 +8,7 @@ import { GetStartedScreen } from "./screens/GetStartedScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { KitsScreen } from "./screens/KitsScreen";
 import { PackingKitScreen } from "./kits/packing/PackingKitScreen";
+import { MegaChoreKitScreen } from "./kits/mega-chore/MegaChoreKitScreen";
 
 export function App() {
   return (
@@ -18,6 +19,7 @@ export function App() {
         <Route path="/add" element={<AddScreen />} />
         <Route path="/add/kit" element={<KitsScreen />} />
         <Route path="/add/kit/packing" element={<PackingKitScreen />} />
+        <Route path="/add/kit/mega-chore" element={<MegaChoreKitScreen />} />
         <Route path="/get-started" element={<GetStartedScreen />} />
         <Route path="/focus" element={<FocusRunScreen />} />
         <Route path="/faq" element={<FaqScreen />} />
