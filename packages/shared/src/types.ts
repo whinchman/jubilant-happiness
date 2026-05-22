@@ -22,9 +22,29 @@ export interface Task {
   createdAt: number;
 }
 
+/** Identifies and locates a chore inside a mega-chore. Set by board reads. */
+export interface MegaChoreRef {
+  id: string;
+  title: string;
+  /** 1-indexed parallel-group index this chore belongs to. */
+  group: number;
+  /** Total number of parallel groups in this mega-chore. */
+  totalGroups: number;
+}
+
+/** One turn in the mega-chore-kit clarifying chat. */
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 /** A chore as returned by the board API — its steps embedded in position order. */
 export interface ChoreWithSteps extends Task {
   steps: Task[];
+  /** Set when this chore is part of a mega-chore; omitted otherwise. */
+  megaChore?: MegaChoreRef;
+  /** True when this mega-chore chore is in a group later than the unblocked-through group. */
+  isBlocked?: boolean;
 }
 
 export interface Project {
@@ -69,6 +89,24 @@ export interface BreakdownPreview {
   area: string;
   steps: BreakdownStep[];
 }
+
+/** Preview produced by the mega-chore kit and confirmed by the multi-chore review. */
+export interface MegaChoreBreakdownPreview {
+  megaChore: { title: string };
+  /** Shared area applied to all chores in the mega-chore. */
+  area: string;
+  chores: Array<{
+    title: string;
+    estimateMinutes: number;
+    group: number;
+    steps: Array<{ title: string; estimateMinutes: number; notes?: string }>;
+  }>;
+}
+
+/** Discriminated turn response from /kits/mega-chore/turn. */
+export type MegaChoreTurn =
+  | { kind: "question"; assistantMessage: string }
+  | { kind: "breakdown"; preview: MegaChoreBreakdownPreview };
 
 export interface AuthStatus {
   /** True before any account has been created (first run). */

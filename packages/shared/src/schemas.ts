@@ -104,3 +104,71 @@ export const packingFormSchema = z.object({
   anythingElse: z.string().max(500).optional(),
 });
 export type PackingFormInput = z.infer<typeof packingFormSchema>;
+
+export const chatMessageSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string().trim().min(1).max(4000),
+});
+export type ChatMessageInput = z.infer<typeof chatMessageSchema>;
+
+export const megaChoreTurnRequestSchema = z.object({
+  messages: z.array(chatMessageSchema).min(1).max(40),
+  forceFinalize: z.boolean().optional(),
+});
+export type MegaChoreTurnRequest = z.infer<typeof megaChoreTurnRequestSchema>;
+
+const megaChoreStepSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  estimateMinutes: z.number().int().min(1).max(240),
+  notes: z.string().max(2000).optional(),
+});
+
+const megaChoreChoreSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  estimateMinutes: z.number().int().min(1).max(600),
+  group: z.number().int().min(1).max(20),
+  steps: z.array(megaChoreStepSchema).min(1).max(30),
+});
+
+export const megaChoreBreakdownPreviewSchema = z
+  .object({
+    megaChore: z.object({ title: z.string().trim().min(1).max(80) }),
+    area: z.string().trim().min(1).max(60),
+    chores: z.array(megaChoreChoreSchema).min(2).max(10),
+  })
+  .refine(
+    (data) => {
+      // Groups must form a consecutive 1..K sequence (no gaps; parallel groups allowed).
+      const unique = Array.from(new Set(data.chores.map((c) => c.group))).sort(
+        (a, b) => a - b,
+      );
+      if (unique[0] !== 1) return false;
+      for (let i = 1; i < unique.length; i++) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        if (unique[i] !== unique[i - 1]! + 1) return false;
+      }
+      return true;
+    },
+    { message: "groups must be consecutive 1..K with no gaps" },
+  );
+export type MegaChoreBreakdownPreviewInput = z.infer<
+  typeof megaChoreBreakdownPreviewSchema
+>;
+
+export const megaChoreTurnResponseSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("question"),
+    assistantMessage: z.string().trim().min(1).max(2000),
+  }),
+  z.object({
+    kind: z.literal("breakdown"),
+    preview: megaChoreBreakdownPreviewSchema,
+  }),
+]);
+export type MegaChoreTurnResponse = z.infer<typeof megaChoreTurnResponseSchema>;
+
+/** Body for /kits/mega-chore/accept — same shape as the preview, post-edit. */
+export const acceptMegaChoreBreakdownSchema = megaChoreBreakdownPreviewSchema;
+export type AcceptMegaChoreBreakdownInput = z.infer<
+  typeof acceptMegaChoreBreakdownSchema
+>;
